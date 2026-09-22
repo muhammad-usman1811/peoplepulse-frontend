@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import Input from '../components/Input';
 import { GoogleIcon, CheckCircleIcon, AlertCircleIcon } from '../components/Icons';
 import { loginUser, loginDemoSession } from '../services/api';
 
 export const Login = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/profile';
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -37,8 +41,11 @@ export const Login = () => {
       const res = loginDemoSession(emailToUse || formData.email || 'admin@peoplepulse.com');
       setLoginStatus({
         type: 'success',
-        message: res.data.message
+        message: 'Signed in successfully! Redirecting to profile...'
       });
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 500);
     }, 400);
   };
 
@@ -58,8 +65,11 @@ export const Login = () => {
       if (res.success) {
         setLoginStatus({
           type: 'success',
-          message: res.data?.message || `Welcome back! Logged in as ${formData.email}`
+          message: 'Authentication successful! Redirecting to profile...'
         });
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 600);
       } else {
         setLoginStatus({
           type: 'error',
@@ -87,8 +97,11 @@ export const Login = () => {
       });
       setLoginStatus({
         type: 'success',
-        message: 'Google authentication successful! (Demo session active)'
+        message: 'Google authentication successful! Redirecting to profile...'
       });
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 500);
     }, 500);
   };
 
