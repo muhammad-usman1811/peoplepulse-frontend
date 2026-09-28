@@ -61,9 +61,9 @@ async function request(endpoint, options = {}, timeoutMs = 8000) {
       const isDbTimeout =
         typeof rawMsg === 'string' &&
         (rawMsg.includes('buffering timed out') ||
-         rawMsg.includes('timed out after') ||
-         rawMsg.includes('MongooseError') ||
-         rawMsg.includes('MongoServerSelectionError'));
+          rawMsg.includes('timed out after') ||
+          rawMsg.includes('MongooseError') ||
+          rawMsg.includes('MongoServerSelectionError'));
 
       const formattedError = isDbTimeout
         ? 'The backend server could not connect to MongoDB Atlas (database buffering timed out).'
@@ -101,6 +101,10 @@ async function request(endpoint, options = {}, timeoutMs = 8000) {
   }
 }
 
+export async function apiRequest(endpoint, options = {}, timeoutMs = 8000) {
+  return request(endpoint, options, timeoutMs);
+}
+
 /**
  * Check backend API health status
  * Endpoint: GET /api/health
@@ -112,77 +116,62 @@ export async function checkApiHealth() {
 
 /**
  * Login user (Super Admin & Employees)
- * Endpoint: POST /api/auth/login with automatic offline/CORS fallback
+ * Endpoint: POST /api/auth/login
+ * Only a genuine success response from the backend (i.e. the email/password
+ * matched a real user in the database) grants access. Any failure - wrong
+ * email, wrong password, or a network/server error - is surfaced as-is and
+ * never silently logs the user in.
  */
 export async function loginUser({ email, password }) {
   const payload = {
     username: email,
-    email: email,
-    password: password
+    password
   };
 
-  try {
-    const res = await request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
+  const res = await request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }, 20000);
 
-    if (res.success && res.data) {
-      const token =
-        res.data.token ||
-        res.data.data?.token ||
-        res.data.access_token ||
-        res.data.jwt;
-      const user = res.data.user || res.data.data?.user || { email };
+  if (res.success && res.data) {
+    const token =
+      res.data.token ||
+      res.data.data?.token ||
+      res.data.accessToken ||
+      res.data.data?.accessToken ||
+      res.data.access_token ||
+      res.data.jwt;
+    const user = res.data.user || res.data.data?.user || { email };
 
-      if (token) {
-        localStorage.setItem('peoplepulse_token', token);
-      }
-      if (user) {
-        localStorage.setItem('peoplepulse_user', JSON.stringify(user));
-      }
-      return res;
-    }
-
-    // Fallback: If remote API failed due to CORS, DB timeout, or 500 error,
-    // grant access when valid credentials or demo credentials are provided
-    if (
-      email === 'admin@peoplepulse.com' ||
-      (email && password && password.length >= 6)
-    ) {
-      const fallback = loginDemoSession(email);
+    if (!token) {
       return {
-        success: true,
-        data: {
-          message: `Signed in successfully as ${email}`,
-          token: fallback.data.token,
-          user: fallback.data.user
-        }
+        success: false,
+        status: res.status,
+        error: 'The login response did not include an authentication token.'
       };
     }
 
+    localStorage.setItem('peoplepulse_token', token);
+    if (user) {
+      localStorage.setItem('peoplepulse_user', JSON.stringify(user));
+    }
     return res;
-  } catch (err) {
-    if (
-      email === 'admin@peoplepulse.com' ||
-      (email && password && password.length >= 6)
-    ) {
-      const fallback = loginDemoSession(email);
-      return {
-        success: true,
-        data: {
-          message: `Signed in successfully as ${email}`,
-          token: fallback.data.token,
-          user: fallback.data.user
-        }
-      };
-    }
-
-    return {
-      success: false,
-      error: err.message || 'Login failed.'
-    };
   }
+
+  // Backend rejected the login (wrong email, wrong password, or the
+  // account doesn't exist). Pass the real error through - don't grant
+  // access. If it's a genuine DB/timeout issue, the UI already offers an
+  // explicit "Continue with Demo Session" button for that case.
+  return {
+    ...res,
+    error: res.isDatabaseError
+      ? res.error
+      : res.status >= 500
+        ? 'The login service returned a server error. Please try again later or contact your administrator.'
+        : res.isTimeout
+          ? 'The login request timed out while waiting for the authentication service.'
+          : res.error || 'Incorrect email or password.'
+  };
 }
 
 /**
@@ -216,34 +205,25 @@ export async function resetPasswordWithToken(resetToken, newPassword) {
 }
 
 /**
- * Demo fallback login for local testing or when backend database is down
+ * Attendance APIs
+ * Swagger: https://peoplepulse-backend.vercel.app/api-docs/#/
  */
-export function loginDemoSession(customEmail = 'admin@peoplepulse.com') {
-  const mockToken = 'demo-jwt-token-' + Date.now();
-  const userName = customEmail.includes('@')
-    ? (customEmail.startsWith('admin') ? 'Ayesha Khan' : customEmail.split('@')[0].replace('.', ' '))
-    : 'Ayesha Khan';
+export async function getMyAttendance() {
+  return await request('/attendance/me', { method: 'GET' });
+}
 
-  const mockUser = {
-    id: 'demo-user-1',
-    email: customEmail,
-    role: 'employee',
-    name: userName,
-    organization: 'PeoplePulse Corp'
-  };
+export async function clockIn() {
+  return await request('/attendance/clock-in', {
+    method: 'POST',
+    body: JSON.stringify({})
+  });
+}
 
-  localStorage.setItem('peoplepulse_token', mockToken);
-  localStorage.setItem('peoplepulse_user', JSON.stringify(mockUser));
-
-  return {
-    success: true,
-    status: 200,
-    data: {
-      message: `Signed in successfully as ${customEmail}`,
-      token: mockToken,
-      user: mockUser
-    }
-  };
+export async function clockOut() {
+  return await request('/attendance/clock-out', {
+    method: 'POST',
+    body: JSON.stringify({})
+  });
 }
 
 /**
