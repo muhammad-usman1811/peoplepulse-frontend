@@ -2,18 +2,17 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
+import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Attendance from './pages/Attendance';
+import MyLeavePage from './pages/MyLeavePage';
+import MyWFHPage from './pages/MyWFHPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
-import { isAuthenticated } from './services/api';
 
-// Root index redirector based on authentication status
+// Start at login; successful authentication routes the user to the dashboard.
 const RootRedirect = () => {
-  return isAuthenticated() ? (
-    <Navigate to="/profile" replace />
-  ) : (
-    <Navigate to="/login" replace />
-  );
+  return <Navigate to="/login" replace />;
 };
 
 export function App() {
@@ -40,7 +39,6 @@ export function App() {
             </PublicRoute>
           }
         />
-
         {/* Protected Dashboard & Profile Routes */}
         <Route
           path="/profile"
@@ -54,7 +52,7 @@ export function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Profile />
+              <Dashboard />
             </ProtectedRoute>
           }
         />
@@ -62,7 +60,7 @@ export function App() {
           path="/attendance"
           element={
             <ProtectedRoute>
-              <Profile />
+              <Attendance />
             </ProtectedRoute>
           }
         />
@@ -70,7 +68,7 @@ export function App() {
           path="/leave"
           element={
             <ProtectedRoute>
-              <Profile />
+              <MyLeavePage />
             </ProtectedRoute>
           }
         />
@@ -78,7 +76,7 @@ export function App() {
           path="/wfh"
           element={
             <ProtectedRoute>
-              <Profile />
+              <MyWFHPage />
             </ProtectedRoute>
           }
         />
