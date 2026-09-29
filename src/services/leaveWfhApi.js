@@ -23,7 +23,11 @@ async function request(path, { method = 'GET', body } = {}) {
         method,
         ...(body ? { body: JSON.stringify(body) } : {}),
     });
-    if (!result.success) throw new Error(result.error || 'The request could not be completed.');
+    if (!result.success) {
+        // These endpoints are not in the backend Swagger yet; say so instead of showing "Route ... not found".
+        if (result.status === 404) throw new Error('This service is not available on the server yet.');
+        throw new Error(result.error || 'The request could not be completed.');
+    }
     return result.data;
 }
 

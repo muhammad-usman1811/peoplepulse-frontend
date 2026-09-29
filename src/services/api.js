@@ -160,8 +160,7 @@ export async function loginUser({ email, password }) {
 
   // Backend rejected the login (wrong email, wrong password, or the
   // account doesn't exist). Pass the real error through - don't grant
-  // access. If it's a genuine DB/timeout issue, the UI already offers an
-  // explicit "Continue with Demo Session" button for that case.
+  // access.
   return {
     ...res,
     error: res.isDatabaseError
@@ -190,7 +189,7 @@ export async function requestPasswordReset(email) {
   return await request('/auth/forgot-password', {
     method: 'POST',
     body: JSON.stringify({ email })
-  });
+  }, 20000);
 }
 
 /**
@@ -198,10 +197,10 @@ export async function requestPasswordReset(email) {
  * Endpoint: PUT /api/auth/reset-password/:resetToken
  */
 export async function resetPasswordWithToken(resetToken, newPassword) {
-  return await request(`/auth/reset-password/${resetToken}`, {
+  return await request(`/auth/reset-password/${encodeURIComponent(resetToken)}`, {
     method: 'PUT',
     body: JSON.stringify({ password: newPassword })
-  });
+  }, 20000);
 }
 
 /**

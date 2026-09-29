@@ -290,6 +290,12 @@ body {
   padding-right: 42px;
 }
 
+.form-input:disabled {
+  background-color: #F8FAFC;
+  color: var(--text-light);
+  cursor: not-allowed;
+}
+
 .password-toggle-btn {
   position: absolute;
   right: 12px;

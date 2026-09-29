@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Attendance from './pages/Attendance';
@@ -9,17 +10,18 @@ import MyLeavePage from './pages/MyLeavePage';
 import MyWFHPage from './pages/MyWFHPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
+import { isAuthenticated } from './services/api';
 
-// Start at login; successful authentication routes the user to the dashboard.
+// Send signed-in users to the dashboard and everyone else to login.
 const RootRedirect = () => {
-  return <Navigate to="/login" replace />;
+  return <Navigate to={isAuthenticated() ? '/dashboard' : '/login'} replace />;
 };
 
 export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Landing / Root Route: Shows Profile if authenticated, else Login */}
+        {/* Landing / Root Route: Dashboard if authenticated, else Login */}
         <Route path="/" element={<RootRedirect />} />
 
         {/* Public Authentication Routes */}
@@ -38,6 +40,14 @@ export function App() {
               <ForgotPassword />
             </PublicRoute>
           }
+        />
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
+        <Route
+          path="/reset-password/:token"
+          element={<ResetPassword />}
         />
         {/* Protected Dashboard & Profile Routes */}
         <Route

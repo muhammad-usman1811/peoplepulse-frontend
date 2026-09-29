@@ -50,7 +50,7 @@ export const Login = () => {
           message: 'Authentication successful! Redirecting to dashboard...'
         });
         setTimeout(() => {
-          navigate(from);
+          navigate(from, { replace: true });
         }, 600);
       } else {
         setLoginStatus({
