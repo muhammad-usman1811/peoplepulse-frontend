@@ -12,6 +12,8 @@ export const Input = ({
   required = false,
   rightLabelElement = null,
   autoComplete,
+  disabled = false,
+  minLength,
   className = ''
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -42,6 +44,8 @@ export const Input = ({
           onChange={onChange}
           required={required}
           autoComplete={autoComplete}
+          disabled={disabled}
+          minLength={minLength}
           className={`form-input ${isPasswordField ? 'has-toggle' : ''}`}
         />
 

@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import Input from '../components/Input';
-import { GoogleIcon, CheckCircleIcon, AlertCircleIcon } from '../components/Icons';
-import { loginUser, loginDemoSession } from '../services/api';
+import {
+  CheckCircleIcon,
+  AlertCircleIcon,
+  GoogleIcon,
+  MicrosoftIcon,
+} from '../components/Icons';
+import { loginUser } from '../services/api';
 
 export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/profile';
+  const from = location.state?.from?.pathname || '/dashboard';
 
   const [formData, setFormData] = useState({
     email: '',
@@ -24,29 +29,6 @@ export const Login = () => {
       [name]: value
     }));
     if (loginStatus) setLoginStatus(null);
-  };
-
-  const handleFillDemo = () => {
-    setFormData({
-      email: 'admin@peoplepulse.com',
-      password: 'password123'
-    });
-    setLoginStatus(null);
-  };
-
-  const handleDemoLogin = (emailToUse) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const res = loginDemoSession(emailToUse || formData.email || 'admin@peoplepulse.com');
-      setLoginStatus({
-        type: 'success',
-        message: 'Signed in successfully! Redirecting to profile...'
-      });
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 500);
-    }, 400);
   };
 
   const handleSubmit = async (e) => {
@@ -65,7 +47,7 @@ export const Login = () => {
       if (res.success) {
         setLoginStatus({
           type: 'success',
-          message: 'Authentication successful! Redirecting to profile...'
+          message: 'Authentication successful! Redirecting to dashboard...'
         });
         setTimeout(() => {
           navigate(from, { replace: true });
@@ -73,8 +55,7 @@ export const Login = () => {
       } else {
         setLoginStatus({
           type: 'error',
-          message: res.error || 'Login failed. Please check your credentials.',
-          isDatabaseError: res.isDatabaseError || res.isTimeout
+          message: res.error || 'Incorrect email or password.'
         });
       }
     } catch (err) {
@@ -86,23 +67,11 @@ export const Login = () => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      loginDemoSession('alex.morgan@gmail.com');
-      setFormData({
-        email: 'alex.morgan@gmail.com',
-        password: '••••••••••••'
-      });
-      setLoginStatus({
-        type: 'success',
-        message: 'Google authentication successful! Redirecting to profile...'
-      });
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 500);
-    }, 500);
+  const handleProviderSignIn = (provider) => {
+    setLoginStatus({
+      type: 'error',
+      message: `${provider} sign-in is not configured for this application yet.`
+    });
   };
 
   return (
@@ -112,32 +81,12 @@ export const Login = () => {
         <p>Enter your credentials to access your account</p>
       </div>
 
-      {loginStatus && (
-        <div className={loginStatus.type === 'success' ? 'success-banner' : 'error-banner'}>
-          {loginStatus.type === 'success' ? <CheckCircleIcon /> : <AlertCircleIcon />}
+      {loginStatus?.type === 'success' && (
+        <div className="success-banner">
+          <CheckCircleIcon />
           <div style={{ flex: 1 }}>
-            <p><strong>{loginStatus.type === 'success' ? 'Authentication successful' : 'Login error'}</strong></p>
+            <p><strong>Authentication successful</strong></p>
             <span>{loginStatus.message}</span>
-            {loginStatus.isDatabaseError && (
-              <div style={{ marginTop: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin(formData.email || 'admin@peoplepulse.com')}
-                  style={{
-                    backgroundColor: '#0A373B',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '6px 12px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ⚡ Continue with Demo Session
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -165,47 +114,48 @@ export const Login = () => {
           onChange={handleChange}
           required
           autoComplete="current-password"
-          rightLabelElement={
-            <Link to="/forgot-password" className="forgot-password-link">
-              Forgot password?
-            </Link>
-          }
         />
+
+        <div className="forgot-password-row">
+          <Link to="/forgot-password" className="forgot-password-link">
+            Forgot password?
+          </Link>
+        </div>
 
         <button type="submit" className="btn-primary" disabled={isLoading}>
           {isLoading ? 'Signing in...' : 'Sign in'}
         </button>
-
-        <div className="auth-divider">
-          <span>or</span>
-        </div>
-
-        <div className="social-buttons-container">
-          <button
-            type="button"
-            className="btn-social"
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-          >
-            <GoogleIcon />
-            <span>Sign in with Google</span>
-          </button>
-        </div>
-
-        <div className="demo-credentials-box">
-          <div className="demo-creds-info">
-            <span className="demo-tag">Demo Creds</span>
-            <code>admin@peoplepulse.com</code> / <code>password123</code>
-          </div>
-          <button
-            type="button"
-            className="btn-auto-fill"
-            onClick={handleFillDemo}
-          >
-            Auto Fill
-          </button>
-        </div>
       </form>
+
+      {loginStatus?.type === 'error' && (
+        <div className="error-banner" role="alert" aria-live="polite">
+          <AlertCircleIcon />
+          <div style={{ flex: 1 }}>
+            <p><strong>Login error</strong></p>
+            <span>{loginStatus.message}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="auth-divider"><span>or</span></div>
+      <div className="social-buttons-container">
+        <button
+          type="button"
+          className="btn-social"
+          onClick={() => handleProviderSignIn('Google')}
+        >
+          <GoogleIcon />
+          Sign in with Google
+        </button>
+        <button
+          type="button"
+          className="btn-social"
+          onClick={() => handleProviderSignIn('Microsoft')}
+        >
+          <MicrosoftIcon />
+          Sign in with Microsoft
+        </button>
+      </div>
     </AuthLayout>
   );
 };
