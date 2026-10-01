@@ -8,6 +8,8 @@ import Profile from './pages/Profile';
 import Attendance from './pages/Attendance';
 import MyLeavePage from './pages/MyLeavePage';
 import MyWFHPage from './pages/MyWFHPage';
+import MyPayslipsPage from './pages/MyPayslipsPage';
+import MyPerformance from './pages/MyPerformance';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import { isAuthenticated } from './services/api';
@@ -94,7 +96,7 @@ export function App() {
           path="/payslips"
           element={
             <ProtectedRoute>
-              <Profile />
+              <MyPayslipsPage />
             </ProtectedRoute>
           }
         />
@@ -102,7 +104,7 @@ export function App() {
           path="/performance"
           element={
             <ProtectedRoute>
-              <Profile />
+              <MyPerformance />
             </ProtectedRoute>
           }
         />

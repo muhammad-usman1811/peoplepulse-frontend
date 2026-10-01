@@ -204,6 +204,31 @@ export async function resetPasswordWithToken(resetToken, newPassword) {
 }
 
 /**
+ * Get the authenticated user's payslips.
+ * Endpoint: GET /api/payroll/me
+ */
+export async function getMyPayslips() {
+  return await request('/payroll/me', { method: 'GET' }, 20000);
+}
+
+/**
+ * Performance APIs
+ * Swagger: https://peoplepulse-backend.vercel.app/api-docs/#/
+ */
+export async function submitPerformanceSelfReview(cycleId, payload) {
+  return await request(`/performance/cycles/${encodeURIComponent(cycleId)}/reviews`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }, 20000);
+}
+
+export async function getPerformanceReview(reviewId) {
+  return await request(`/performance/reviews/${encodeURIComponent(reviewId)}`, {
+    method: 'GET'
+  }, 20000);
+}
+
+/**
  * Attendance APIs
  * Swagger: https://peoplepulse-backend.vercel.app/api-docs/#/
  */
