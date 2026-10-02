@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Download, DollarSign, FileText } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import { cardClass, cardTitleClass } from '../components/requestUi';
-import { getMyPayslips } from '../services/api';
+import { getMyPayslip, getMyPayslips } from '../services/api';
+
+const formatPkR = (value) => `PKR ${Number(value || 0).toLocaleString('en-US')}`;
 
 const toAmount = (value) => {
   const amount = Number(value);
@@ -10,7 +12,6 @@ const toAmount = (value) => {
 };
 
 const sum = (items) => items.reduce((total, item) => total + toAmount(item.amount), 0);
-const formatPkR = (value) => `PKR ${Number(value || 0).toLocaleString('en-US')}`;
 
 function normalizeLines(value, fallbackLabel) {
   if (Array.isArray(value)) {
@@ -25,65 +26,71 @@ function normalizeLines(value, fallbackLabel) {
   }
 
   if (value && typeof value === 'object') {
-    return Object.entries(value).map(([label, amount]) => ({ label, amount: toAmount(amount) }));
+    return Object.entries(value).map(([label, entry]) => ({
+      label,
+      amount: toAmount(typeof entry === 'object' && entry !== null ? entry.amount ?? entry.value ?? entry.total : entry)
+    }));
   }
 
   return value == null ? [] : [{ label: fallbackLabel, amount: toAmount(value) }];
 }
 
-function getPayslipRecords(payload) {
+function extractPayslips(payload) {
   if (Array.isArray(payload)) return payload;
   if (!payload || typeof payload !== 'object') return [];
 
-  for (const key of ['payslips', 'payroll', 'records', 'items', 'results', 'data']) {
-    const value = payload[key];
-    if (Array.isArray(value)) return value;
-    const nested = getPayslipRecords(value);
+  for (const key of ['payslips', 'items', 'results', 'records', 'data']) {
+    if (Array.isArray(payload[key])) return payload[key];
+    const nested = extractPayslips(payload[key]);
     if (nested.length) return nested;
   }
 
   return [];
 }
 
+function unwrapPayslip(payload) {
+  return payload?.payslip || payload?.data?.payslip || payload?.data?.data || payload?.data || payload;
+}
+
 function formatPeriod(record) {
   const period = record.period || record.payPeriod || record.payrollMonth || record.month || record.date;
-  if (!period) return record.year ? String(record.year) : 'Payslip';
-
-  if (typeof period === 'object') {
-    const month = period.month || period.name;
-    const year = period.year;
-    return [month, year].filter(Boolean).join(' ') || 'Payslip';
+  if (period && typeof period === 'object') {
+    return [period.month || period.name, period.year].filter(Boolean).join(' ') || 'Payslip';
   }
 
-  if (record.year && /^\d{1,2}$/.test(String(period))) {
-    return new Date(Number(record.year), Number(period) - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const year = record.year;
+  if (year && /^\d{1,2}$/.test(String(period))) {
+    return new Date(Number(year), Number(period) - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 
-  const monthMatch = String(period).match(/^(\d{4})-(\d{1,2})$/);
+  const monthMatch = String(period || '').match(/^(\d{4})-(\d{1,2})$/);
   if (monthMatch) {
     return new Date(Number(monthMatch[1]), Number(monthMatch[2]) - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
-  return String(period);
+  return period ? String(period) : year ? String(year) : 'Payslip';
 }
 
-function normalizePayslip(record, index) {
+function normalizePayslip(record, index = 0) {
   const earnings = normalizeLines(record.earnings ?? record.allowances ?? record.components ?? record.salaryBreakdown, 'Earnings');
-  const deductionLines = normalizeLines(record.deductionItems ?? record.deductions ?? record.deductionBreakdown, 'Deductions');
+  const deductionsList = normalizeLines(record.deductionItems ?? record.deductions ?? record.deductionBreakdown, 'Deductions');
   const grossValue = record.grossPay ?? record.grossSalary ?? record.grossAmount ?? record.totalEarnings ?? record.gross;
-  const deductionValue = record.totalDeductions ?? record.deductionsTotal ?? record.deductionAmount;
+  const deductionValue = typeof record.deductions === 'number'
+    ? record.deductions
+    : record.totalDeductions ?? record.deductionsTotal ?? record.deductionAmount;
   const netValue = record.netPay ?? record.netSalary ?? record.netAmount ?? record.net;
   const gross = grossValue == null ? sum(earnings) : toAmount(grossValue);
-  const deductions = deductionValue == null ? sum(deductionLines) : toAmount(deductionValue);
+  const deductions = deductionValue == null ? sum(deductionsList) : toAmount(deductionValue);
   const period = formatPeriod(record);
 
   return {
+    ...record,
     id: record.id || record._id || record.payslipId || `${period}-${index}`,
     period,
     earnings,
-    deductionsList: deductionLines,
+    deductionsList,
     gross,
     deductions,
-    net: netValue == null ? gross - deductions : toAmount(netValue),
+    net: netValue == null ? gross - deductions : toAmount(netValue)
   };
 }
 
@@ -220,10 +227,14 @@ const styles = `
 
 export default function MyPayslipsPage() {
   const [payslips, setPayslips] = useState([]);
+  const [selectedId, setSelectedId] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [retryCount, setRetryCount] = useState(0);
-  const [selectedId, setSelectedId] = useState('');
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
+  const [detailRetryCount, setDetailRetryCount] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -231,23 +242,23 @@ export default function MyPayslipsPage() {
     const loadPayslips = async () => {
       setLoading(true);
       setLoadError('');
-
       try {
-        const payrollResult = await getMyPayslips();
+        const result = await getMyPayslips({ page: 1, limit: 100 });
+        if (!result.success) throw new Error(result.error || 'Could not load your payslips.');
+        const records = extractPayslips(result.data);
+        const normalized = records
+          .filter((record) => record && typeof record === 'object')
+          .map(normalizePayslip);
         if (!active) return;
-        if (!payrollResult.success) throw new Error(payrollResult.error || "Couldn't load payroll records.");
-
-        const records = getPayslipRecords(payrollResult.data);
-        const nextPayslips = records.filter((record) => record && typeof record === 'object').map(normalizePayslip);
-        setPayslips(nextPayslips);
-        setSelectedId((currentId) => nextPayslips.some((payslip) => payslip.id === currentId)
+        setPayslips(normalized);
+        setSelectedId((currentId) => normalized.some((payslip) => payslip.id === currentId)
           ? currentId
-          : nextPayslips[0]?.id || '');
+          : normalized[0]?.id || '');
       } catch (error) {
         if (!active) return;
-        setLoadError(error.message || "Couldn't load payroll records.");
         setPayslips([]);
         setSelectedId('');
+        setLoadError(error.message || 'Could not load your payslips.');
       } finally {
         if (active) setLoading(false);
       }
@@ -259,7 +270,39 @@ export default function MyPayslipsPage() {
     };
   }, [retryCount]);
 
-  const selected = payslips.find((payslip) => payslip.id === selectedId) ?? payslips[0];
+  useEffect(() => {
+    if (!selectedId) {
+      setDetail(null);
+      setDetailError('');
+      return undefined;
+    }
+
+    let active = true;
+    setDetailLoading(true);
+    setDetailError('');
+
+    getMyPayslip(selectedId).then((result) => {
+      if (!active) return;
+      if (!result.success) throw new Error(result.error || 'Could not load this payslip detail.');
+      const record = unwrapPayslip(result.data);
+      if (!record || typeof record !== 'object') throw new Error('The payslip detail response was empty.');
+      setDetail(normalizePayslip(record));
+    }).catch((error) => {
+      if (active) {
+        setDetail(null);
+        setDetailError(error.message || 'Could not load this payslip detail.');
+      }
+    }).finally(() => {
+      if (active) setDetailLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedId, detailRetryCount]);
+
+  const selectedFromList = payslips.find((payslip) => payslip.id === selectedId);
+  const selected = detail?.id === selectedId ? { ...selectedFromList, ...detail } : selectedFromList;
 
   const handleDownload = (payslip) => {
     if (!payslip) return;
@@ -311,42 +354,36 @@ export default function MyPayslipsPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr>
-                    <td colSpan={5} className="py-6 text-center text-sm text-slate-500">
-                      Loading payslips...
-                    </td>
-                  </tr>
+                  <tr><td colSpan={5} className="py-6 text-center text-sm text-slate-500">Loading payslips…</td></tr>
                 ) : loadError ? (
                   <tr><td colSpan={5} className="py-6 text-center text-sm text-red-600">Payslips could not be loaded.</td></tr>
                 ) : payslips.length === 0 ? (
                   <tr><td colSpan={5} className="py-6 text-center text-sm text-slate-500">No payslips available.</td></tr>
-                ) : (
-                  payslips.map((payslip) => (
-                    <tr
-                      key={payslip.id}
-                      aria-selected={payslip.id === selected?.id}
-                      onClick={() => setSelectedId(payslip.id)}
-                    >
-                      <td>{payslip.period}</td>
-                      <td>{formatPkR(payslip.gross)}</td>
-                      <td>{formatPkR(payslip.deductions)}</td>
-                      <td>{formatPkR(payslip.net)}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="payslips-download-btn secondary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleDownload(payslip);
-                          }}
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          Download
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ) : payslips.map((payslip) => (
+                  <tr
+                    key={payslip.id}
+                    aria-selected={payslip.id === selectedId}
+                    onClick={() => setSelectedId(payslip.id)}
+                  >
+                    <td>{payslip.period}</td>
+                    <td>{formatPkR(payslip.gross)}</td>
+                    <td>{formatPkR(payslip.deductions)}</td>
+                    <td>{formatPkR(payslip.net)}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="payslips-download-btn secondary"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDownload(payslip);
+                        }}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -367,6 +404,16 @@ export default function MyPayslipsPage() {
               Download PDF
             </button>
           </div>
+
+          {detailLoading && <p className="mt-3 text-xs text-slate-500">Loading payslip details…</p>}
+          {detailError && (
+            <p className="mt-3 text-xs text-red-600" role="alert">
+              {detailError}{' '}
+              <button type="button" className="font-semibold underline" onClick={() => setDetailRetryCount((count) => count + 1)}>
+                Retry
+              </button>
+            </p>
+          )}
 
           <div className="payslips-detail-grid">
             <div className="payslips-detail-block">

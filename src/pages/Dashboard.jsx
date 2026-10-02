@@ -1,15 +1,55 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowRight, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+import { getCurrentUser } from '../services/api';
 
 export default function Dashboard() {
+  const [userName, setUserName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadUser = async () => {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const result = await getCurrentUser();
+        if (!result.success) throw new Error(result.error || 'Could not load your account details.');
+        const payload = result.data?.user || result.data?.data?.user || result.data?.data || result.data;
+        if (active) setUserName(payload?.name || payload?.fullName || payload?.username || '');
+      } catch (error) {
+        if (active) setLoadError(error.message || 'Could not load your account details.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    loadUser();
+    return () => {
+      active = false;
+    };
+  }, [retryCount]);
+
   return (
     <DashboardLayout title="Dashboard" breadcrumbs="Home / Dashboard">
       <div className="mx-auto w-full max-w-5xl space-y-6">
         <div>
           <p className="text-sm text-slate-500">Employee dashboard</p>
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">Welcome back, Ayesha</h2>
+          <h2 className="mt-1 text-2xl font-bold text-slate-900">
+            {loading ? 'Loading your dashboard…' : `Welcome back${userName ? `, ${userName}` : ''}`}
+          </h2>
+          {loadError && (
+            <p className="mt-2 text-sm text-red-600" role="alert">
+              {loadError}{' '}
+              <button type="button" className="font-semibold underline" onClick={() => setRetryCount((count) => count + 1)}>
+                Retry
+              </button>
+            </p>
+          )}
         </div>
 
         <section className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-6 sm:flex-row sm:items-center sm:justify-between">

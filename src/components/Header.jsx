@@ -64,6 +64,7 @@ export const Header = ({
           type="button" 
           className="header-icon-btn notification-btn"
           aria-label="View notifications"
+          onClick={() => navigate('/notifications')}
         >
           <Bell size={18} />
           <span className="notification-badge-dot" />

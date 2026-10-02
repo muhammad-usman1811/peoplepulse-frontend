@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { applyWfh, getWfhRequests, DURATIONS } from '../services/leaveWfhApi';
+import { applyWfh, getWfhRequests } from '../services/leaveWfhApi';
 import { todayKey, formatLong, parseKey, toKey, addDays, startOfWeek } from '../utils/dates';
 import {
   BRAND,
@@ -15,7 +15,7 @@ import {
 } from '../components/requestUi';
 
 const DAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-const emptyForm = () => ({ date: todayKey(), duration: DURATIONS[0].value, reason: '' });
+const emptyForm = () => ({ date: todayKey(), reason: '' });
 
 function buildWeek(requests) {
   const byDate = {};
@@ -95,7 +95,7 @@ export default function MyWFHPage() {
       const created = await applyWfh(form);
       setRequests((current) => [created, ...current]);
       setSuccess("WFH request submitted — it's now pending approval.");
-      setForm((current) => ({ ...emptyForm(), duration: current.duration }));
+      setForm(emptyForm());
       load({ silent: true });
     } catch (error) {
       setFormError(error.message || "Couldn't submit your request. Please try again.");
@@ -109,23 +109,17 @@ export default function MyWFHPage() {
       <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-4 lg:grid-cols-2">
         <form onSubmit={handleSubmit} className={cardClass} noValidate>
           <h2 className={cardTitleClass}>Apply for Work From Home</h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
               <label className={labelClass} htmlFor="wfhDate">Date</label>
               <input id="wfhDate" type="date" className={inputClass} value={form.date} onChange={(event) => update('date', event.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass} htmlFor="wfhDuration">Duration</label>
-              <select id="wfhDuration" className={inputClass} value={form.duration} onChange={(event) => update('duration', event.target.value)}>
-                {DURATIONS.map((duration) => <option key={duration.value} value={duration.value}>{duration.label}</option>)}
-              </select>
             </div>
           </div>
           <div className="mt-3">
             <label className={labelClass} htmlFor="wfhReason">Reason</label>
             <textarea id="wfhReason" rows={3} placeholder="e.g. Home internet appointment" className={`${inputClass} resize-y`} value={form.reason} onChange={(event) => update('reason', event.target.value)} />
           </div>
-          <SubmitButton submitting={submitting}>Submit Request</SubmitButton>
+          <SubmitButton submitting={submitting} className="border-0">Submit Request</SubmitButton>
           <FormMessage error={formError} success={success} />
         </form>
 

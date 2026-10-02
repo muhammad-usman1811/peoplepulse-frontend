@@ -10,13 +10,14 @@ import MyLeavePage from './pages/MyLeavePage';
 import MyWFHPage from './pages/MyWFHPage';
 import MyPayslipsPage from './pages/MyPayslipsPage';
 import MyPerformance from './pages/MyPerformance';
+import MyDocumentsPage from './pages/MyDocumentsPage';
+import NotificationsPage from './pages/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
-import { isAuthenticated } from './services/api';
 
-// Send signed-in users to the dashboard and everyone else to login.
+// Always show the login screen when opening the app root.
 const RootRedirect = () => {
-  return <Navigate to={isAuthenticated() ? '/dashboard' : '/login'} replace />;
+  return <Navigate to="/login" replace />;
 };
 
 export function App() {
@@ -112,7 +113,7 @@ export function App() {
           path="/documents"
           element={
             <ProtectedRoute>
-              <Profile />
+              <MyDocumentsPage />
             </ProtectedRoute>
           }
         />
@@ -136,7 +137,7 @@ export function App() {
           path="/notifications"
           element={
             <ProtectedRoute>
-              <Profile />
+              <NotificationsPage />
             </ProtectedRoute>
           }
         />

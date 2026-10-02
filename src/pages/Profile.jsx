@@ -1,30 +1,36 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import Card from '../components/Card';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { Check, X, Camera, Lock, CheckCircle2 } from 'lucide-react';
+import {
+  getMyProfile,
+  getNotificationPreferences,
+  updateMyProfile,
+  updateNotificationPreferences,
+  updatePassword,
+} from '../services/api';
+
+function getApiPayload(result) {
+  const payload = result?.data;
+  return payload?.profile || payload?.data?.profile || payload?.data?.user || payload?.data || payload || {};
+}
 
 export const Profile = () => {
-  // Personal information form state
   const [personalInfo, setPersonalInfo] = useState({
-    fullName: 'Ayesha Khan',
-    employeeId: 'EMP-1042',
-    workEmail: 'ayesha.khan@company.com',
-    phoneNumber: '+92 300 1234567',
-    department: 'Product Design',
-    manager: 'Bilal Ahmed',
-    role: 'UI/UX Designer',
-    avatarInitials: 'AK'
+    fullName: '',
+    employeeId: '',
+    workEmail: '',
+    phoneNumber: '',
+    department: '',
+    manager: '',
+    role: '',
+    avatarInitials: ''
   });
 
-  // Security & Notification state
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
-
-  // Toast / Status message
   const [toastMessage, setToastMessage] = useState(null);
-
-  // Password Modal state
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -32,10 +38,62 @@ export const Profile = () => {
     confirmPassword: ''
   });
   const [passwordError, setPasswordError] = useState('');
-
-  // Photo change state
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [preferenceError, setPreferenceError] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [savingPreferences, setSavingPreferences] = useState(false);
+  const [reloadCount, setReloadCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadProfile = async () => {
+      setLoading(true);
+      setLoadError('');
+      const [profileResult, preferenceResult] = await Promise.all([
+        getMyProfile(),
+        getNotificationPreferences()
+      ]);
+
+      if (!active) return;
+      if (profileResult.success) {
+        const profile = getApiPayload(profileResult);
+        const name = profile.name || profile.fullName || '';
+        const manager = profile.manager?.name || profile.manager?.fullName || profile.manager || '';
+        setPersonalInfo((current) => ({
+          ...current,
+          fullName: name,
+          employeeId: profile.employeeId || '',
+          workEmail: profile.email || profile.workEmail || '',
+          phoneNumber: profile.phoneNumber || '',
+          department: profile.department?.name || profile.department || '',
+          manager: typeof manager === 'string' ? manager : '',
+          role: profile.designation?.name || profile.designation || profile.role || '',
+          avatarInitials: name.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+        }));
+      } else {
+        setLoadError(profileResult.error || 'Could not load your profile.');
+      }
+
+      if (preferenceResult.success) {
+        const preferences = getApiPayload(preferenceResult);
+        setEmailNotifications(preferences.email ?? true);
+        setPushNotifications(preferences.push ?? true);
+      } else {
+        setPreferenceError(preferenceResult.error || 'Could not load notification preferences.');
+      }
+      setLoading(false);
+    };
+
+    loadProfile();
+    return () => {
+      active = false;
+    };
+  }, [reloadCount]);
 
   const showToast = (message) => {
     setToastMessage(message);
@@ -52,12 +110,27 @@ export const Profile = () => {
     }));
   };
 
-  const handleSavePersonalInfo = (e) => {
+  const handleSavePersonalInfo = async (e) => {
     e.preventDefault();
-    showToast('Personal information updated successfully!');
+    setSavingProfile(true);
+    try {
+      const result = await updateMyProfile({
+        name: personalInfo.fullName,
+        employeeId: personalInfo.employeeId,
+        phoneNumber: personalInfo.phoneNumber,
+        department: personalInfo.department,
+        designation: personalInfo.role
+      });
+      if (!result.success) throw new Error(result.error || 'Could not update your profile.');
+      showToast('Personal information updated successfully.');
+    } catch (error) {
+      setLoadError(error.message || 'Could not update your profile.');
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (!passwordForm.currentPassword) {
       setPasswordError('Please enter your current password');
@@ -73,9 +146,37 @@ export const Profile = () => {
     }
 
     setPasswordError('');
-    setIsPasswordModalOpen(false);
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    showToast('Password updated successfully!');
+    setSavingPassword(true);
+    try {
+      const result = await updatePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      if (!result.success) throw new Error(result.error || 'Could not update your password.');
+      setIsPasswordModalOpen(false);
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      showToast('Password updated successfully.');
+    } catch (error) {
+      setPasswordError(error.message || 'Could not update your password.');
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const savePreference = async (key, value) => {
+    const previous = { email: emailNotifications, push: pushNotifications };
+    const next = { ...previous, [key]: value };
+    setPreferenceError('');
+    setEmailNotifications(next.email);
+    setPushNotifications(next.push);
+    setSavingPreferences(true);
+    try {
+      const result = await updateNotificationPreferences(next);
+      if (!result.success) throw new Error(result.error || 'Could not update notification preferences.');
+    } catch (error) {
+      setEmailNotifications(previous.email);
+      setPushNotifications(previous.push);
+      setPreferenceError(error.message || 'Could not update notification preferences.');
+    } finally {
+      setSavingPreferences(false);
+    }
   };
 
   const handlePhotoUpload = (e) => {
@@ -85,7 +186,7 @@ export const Profile = () => {
       reader.onloadend = () => {
         setPhotoPreview(reader.result);
         setIsPhotoModalOpen(false);
-        showToast('Profile photo updated successfully!');
+        showToast('Photo preview updated. Profile photo uploads are not available yet.');
       };
       reader.readAsDataURL(file);
     }
@@ -100,6 +201,14 @@ export const Profile = () => {
           <span>{toastMessage}</span>
         </div>
       )}
+
+      {loadError && (
+        <div className="profile-toast-notification" role="alert">
+          <span>{loadError}</span>
+          <button type="button" onClick={() => setReloadCount((count) => count + 1)}>Retry</button>
+        </div>
+      )}
+      {loading && <p className="mb-4 text-sm text-slate-500">Loading your profile…</p>}
 
       <div className="profile-page-grid">
         {/* Top Row: Left Profile Photo Card & Right Personal Information Card */}
@@ -154,6 +263,7 @@ export const Profile = () => {
                     value={personalInfo.fullName}
                     onChange={handleInputChange}
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -186,6 +296,7 @@ export const Profile = () => {
                     value={personalInfo.workEmail}
                     onChange={handleInputChange}
                     required
+                    readOnly
                   />
                 </div>
 
@@ -239,15 +350,14 @@ export const Profile = () => {
                     type="text"
                     className="profile-form-input"
                     value={personalInfo.manager}
-                    onChange={handleInputChange}
-                    required
+                    readOnly
                   />
                 </div>
               </div>
 
               <div className="form-submit-row">
-                <button type="submit" className="btn-save-changes">
-                  Save Changes
+                <button type="submit" className="btn-save-changes" disabled={savingProfile || loading}>
+                  {savingProfile ? 'Saving…' : 'Save Changes'}
                 </button>
               </div>
             </form>
@@ -288,7 +398,7 @@ export const Profile = () => {
                 <ToggleSwitch
                   id="email-notifications-toggle"
                   checked={emailNotifications}
-                  onChange={setEmailNotifications}
+                  onChange={(value) => savePreference('email', value)}
                   label="Email notifications"
                 />
               </div>
@@ -303,10 +413,12 @@ export const Profile = () => {
                 <ToggleSwitch
                   id="push-notifications-toggle"
                   checked={pushNotifications}
-                  onChange={setPushNotifications}
+                  onChange={(value) => savePreference('push', value)}
                   label="Push notifications"
                 />
               </div>
+              {preferenceError && <p className="mt-3 text-xs text-red-600" role="alert">{preferenceError}</p>}
+              {savingPreferences && <p className="mt-3 text-xs text-slate-500">Saving preferences…</p>}
             </div>
           </Card>
         </div>
@@ -379,8 +491,8 @@ export const Profile = () => {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-save-changes">
-                  Update Password
+                <button type="submit" className="btn-save-changes" disabled={savingPassword}>
+                  {savingPassword ? 'Updating…' : 'Update Password'}
                 </button>
               </div>
             </form>

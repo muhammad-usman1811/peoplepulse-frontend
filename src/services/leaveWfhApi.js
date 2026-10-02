@@ -2,9 +2,10 @@ import { apiRequest } from './api';
 import { daysBetween } from '../utils/dates';
 
 export const ENDPOINTS = {
-    leaveBalance: '/leave/balance',
-    leaveRequests: '/leave/requests',
-    wfhRequests: '/wfh/requests',
+    leaveRequests: '/leave-requests/my',
+    createLeaveRequest: '/leave-requests',
+    wfhRequests: '/wfh-requests/my',
+    createWfhRequest: '/wfh-requests',
 };
 
 export const LEAVE_TYPES = [
@@ -80,36 +81,13 @@ export function normalizeWfh(record) {
     };
 }
 
-function normalizeBalance(balance) {
-    const total = Number(pick(balance, ['total', 'allowance', 'entitlement', 'quota']));
-    const used = pick(balance, ['used', 'taken']);
-    let remaining = pick(balance, ['remaining', 'balance', 'available']);
-    if (remaining == null && used != null) remaining = total - Number(used);
-    return {
-        type: leaveTypeLabel(pick(balance, ['leaveType', 'type', 'name', 'leave_type'])),
-        total: Number.isFinite(total) ? total : null,
-        remaining: remaining == null ? null : Number(remaining),
-    };
-}
-
-export async function getLeaveBalances() {
-    const data = await request(ENDPOINTS.leaveBalance);
-    const value = data?.data ?? data;
-    const list = Array.isArray(value)
-        ? value
-        : value?.items ?? (value && typeof value === 'object'
-            ? Object.entries(value).map(([type, entry]) => ({ type, ...(typeof entry === 'object' ? entry : { remaining: entry }) }))
-            : []);
-    return list.map(normalizeBalance);
-}
-
 export async function getLeaveRequests() {
     return unwrapList(await request(ENDPOINTS.leaveRequests)).map(normalizeLeave);
 }
 
-export async function applyLeave({ leaveType, duration, fromDate, toDate, reason }) {
-    const payload = { leaveType, duration, fromDate, toDate, reason };
-    const data = await request(ENDPOINTS.leaveRequests, { method: 'POST', body: payload });
+export async function applyLeave({ leaveType, fromDate, toDate, reason }) {
+    const payload = { type: leaveType, startDate: fromDate, endDate: toDate, reason };
+    const data = await request(ENDPOINTS.createLeaveRequest, { method: 'POST', body: payload });
     return normalizeLeave({ ...payload, status: 'pending', ...unwrap(data) });
 }
 
@@ -117,8 +95,8 @@ export async function getWfhRequests() {
     return unwrapList(await request(ENDPOINTS.wfhRequests)).map(normalizeWfh);
 }
 
-export async function applyWfh({ date, duration, reason }) {
-    const payload = { date, duration, reason };
-    const data = await request(ENDPOINTS.wfhRequests, { method: 'POST', body: payload });
-    return normalizeWfh({ ...payload, status: 'pending', ...unwrap(data) });
+export async function applyWfh({ date, reason }) {
+    const payload = { startDate: date, endDate: date, reason };
+    const data = await request(ENDPOINTS.createWfhRequest, { method: 'POST', body: payload });
+    return normalizeWfh({ ...payload, date, status: 'pending', ...unwrap(data) });
 }

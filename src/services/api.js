@@ -182,6 +182,55 @@ export async function getCurrentUser() {
 }
 
 /**
+ * Get the authenticated user's profile details.
+ * Endpoint: GET /api/profile
+ */
+export async function getMyProfile() {
+  return await request('/profile', { method: 'GET' });
+}
+
+/**
+ * Update the authenticated user's profile details.
+ * Endpoint: PUT /api/profile
+ */
+export async function updateMyProfile(profile) {
+  return await request('/profile', {
+    method: 'PUT',
+    body: JSON.stringify(profile)
+  }, 20000);
+}
+
+/**
+ * Change the authenticated user's password.
+ * Endpoint: PUT /api/profile/password
+ */
+export async function updatePassword(currentPassword, newPassword) {
+  return await request('/profile/password', {
+    method: 'PUT',
+    body: JSON.stringify({ currentPassword, newPassword })
+  }, 20000);
+}
+
+/**
+ * Get the authenticated user's notification preferences.
+ * Endpoint: GET /api/profile/notifications
+ */
+export async function getNotificationPreferences() {
+  return await request('/profile/notifications', { method: 'GET' });
+}
+
+/**
+ * Update the authenticated user's notification preferences.
+ * Endpoint: PUT /api/profile/notifications
+ */
+export async function updateNotificationPreferences(preferences) {
+  return await request('/profile/notifications', {
+    method: 'PUT',
+    body: JSON.stringify(preferences)
+  }, 20000);
+}
+
+/**
  * Request password reset link
  * Endpoint: POST /api/auth/forgot-password
  */
@@ -204,11 +253,22 @@ export async function resetPasswordWithToken(resetToken, newPassword) {
 }
 
 /**
- * Get the authenticated user's payslips.
- * Endpoint: GET /api/payroll/me
+ * Get payslips visible to the authenticated user.
+ * Endpoint: GET /api/payroll/payslips
  */
-export async function getMyPayslips() {
-  return await request('/payroll/me', { method: 'GET' }, 20000);
+export async function getMyPayslips({ page = 1, limit = 100, month, status } = {}) {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (month) query.set('month', month);
+  if (status) query.set('status', status);
+  return await request(`/payroll/payslips?${query.toString()}`, { method: 'GET' }, 20000);
+}
+
+/**
+ * Get a single payslip visible to the authenticated user.
+ * Endpoint: GET /api/payroll/payslips/:id
+ */
+export async function getMyPayslip(payslipId) {
+  return await request(`/payroll/payslips/${encodeURIComponent(payslipId)}`, { method: 'GET' }, 20000);
 }
 
 /**
@@ -220,6 +280,25 @@ export async function submitPerformanceSelfReview(cycleId, payload) {
     method: 'POST',
     body: JSON.stringify(payload)
   }, 20000);
+}
+
+/**
+ * List review cycles available to the authenticated user.
+ * Endpoint: GET /api/performance/cycles
+ */
+export async function getPerformanceCycles({ status = 'open', page = 1, limit = 100 } = {}) {
+  const query = new URLSearchParams({ status, page: String(page), limit: String(limit) });
+  return await request(`/performance/cycles?${query.toString()}`, { method: 'GET' }, 20000);
+}
+
+/**
+ * List the authenticated employee's performance reviews.
+ * Endpoint: GET /api/performance/reviews/my
+ */
+export async function getMyPerformanceReviews({ page = 1, limit = 100, cycle } = {}) {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (cycle) query.set('cycle', cycle);
+  return await request(`/performance/reviews/my?${query.toString()}`, { method: 'GET' }, 20000);
 }
 
 export async function getPerformanceReview(reviewId) {
