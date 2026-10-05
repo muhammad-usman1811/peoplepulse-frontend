@@ -308,6 +308,26 @@ export async function getPerformanceReview(reviewId) {
 }
 
 /**
+ * List onboarding tasks assigned to the authenticated user.
+ * Endpoint: GET /api/onboarding/my-tasks
+ */
+export async function getMyOnboardingTasks({ page = 1, limit = 100 } = {}) {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return await request(`/onboarding/my-tasks?${query.toString()}`, { method: 'GET' }, 20000);
+}
+
+/**
+ * Mark an onboarding task assigned to the authenticated user as complete.
+ * Endpoint: PATCH /api/onboarding/tasks/:taskId/complete
+ */
+export async function completeMyOnboardingTask(taskId) {
+  return await request(`/onboarding/tasks/${encodeURIComponent(taskId)}/complete`, {
+    method: 'PATCH',
+    body: JSON.stringify({})
+  }, 20000);
+}
+
+/**
  * Attendance APIs
  * Swagger: https://peoplepulse-backend.vercel.app/api-docs/#/
  */
@@ -356,4 +376,3 @@ export function logoutUser() {
   localStorage.removeItem('peoplepulse_token');
   localStorage.removeItem('peoplepulse_user');
 }
-
