@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import {
+  getPerformanceReview,
   getMyPerformanceReviews,
   getPerformanceCycles,
   submitPerformanceSelfReview,
@@ -213,29 +214,85 @@ function GoalsCard({ review }) {
   );
 }
 
-function ReviewHistoryCard({ reviews, cycles }) {
+function getReviewId(review) {
+  return String(review?.id || review?._id || review?.reviewId || '');
+}
+
+function ReviewDetailsCard({ review, loading, error }) {
+  return (
+    <section className="mp-card mp-review-details">
+      <h2 className="mp-card-title">Review Details</h2>
+      {loading ? (
+        <p className="mp-empty">Loading review details…</p>
+      ) : error ? (
+        <p className="mp-message mp-message--error" role="alert">{error}</p>
+      ) : !review ? (
+        <p className="mp-empty">Choose a review from your history to view its details.</p>
+      ) : (
+        <>
+          <div className="mp-review-ratings">
+            <p><strong>Self-rating:</strong> {review.rating ? `${review.rating} / 5` : '—'}</p>
+            <p><strong>Manager rating:</strong> {review.managerRating ? `${review.managerRating} / 5` : '—'}</p>
+          </div>
+          <h3 className="mp-detail-heading">Key achievements</h3>
+          <p className="mp-detail-copy">{review.selfReview || 'No self-review was provided.'}</p>
+          <h3 className="mp-detail-heading">Manager feedback</h3>
+          <p className="mp-detail-copy">{review.managerReview || 'No manager feedback is available.'}</p>
+          <h3 className="mp-detail-heading">Goals</h3>
+          {Array.isArray(review.goals) && review.goals.length ? (
+            <ul className="mp-detail-goals">
+              {review.goals.map((goal, index) => (
+                <li key={goal.id || goal._id || `${goal.title}-${index}`}>
+                  <strong>{goal.title}</strong>
+                  {goal.status && <span> — {goal.status.replace('_', ' ')}</span>}
+                  {goal.description && <p>{goal.description}</p>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mp-empty">No goals were included in this review.</p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function ReviewHistoryCard({ reviews, cycles, selectedReviewId, onSelectReview }) {
   return (
     <section className="mp-card mp-history-card">
       <h2 className="mp-card-title">Review History</h2>
       <div className="mp-table-wrap">
         <table className="mp-table">
           <thead>
-            <tr><th>CYCLE</th><th>RATING</th><th>MANAGER</th><th>STATUS</th></tr>
+            <tr><th>CYCLE</th><th>RATING</th><th>MANAGER</th><th>STATUS</th><th>DETAILS</th></tr>
           </thead>
           <tbody>
             {reviews.length ? reviews.map((review, index) => {
               const cycleId = getReviewCycleId(review);
               const cycle = cycles.find((item) => getCycleId(item) === cycleId);
+              const reviewId = getReviewId(review);
               return (
-                <tr key={review.id || review._id || `${cycleId}-${index}`}>
+                <tr key={reviewId || `${cycleId}-${index}`}>
                   <td>{review.cycle?.period || review.period || (cycle && getCycleLabel(cycle)) || cycleId || '—'}</td>
                   <td>{review.rating ? `${review.rating} / 5` : '—'}</td>
                   <td>{review.manager?.name || review.managerName || '—'}</td>
                   <td><span className="mp-status">{review.status || 'Submitted'}</span></td>
+                  <td>
+                    <button
+                      type="button"
+                      className="mp-detail-button"
+                      onClick={() => onSelectReview(reviewId)}
+                      disabled={!reviewId}
+                      aria-pressed={selectedReviewId === reviewId}
+                    >
+                      {selectedReviewId === reviewId ? 'Viewing' : 'View'}
+                    </button>
+                  </td>
                 </tr>
               );
             }) : (
-              <tr><td colSpan={4} className="mp-empty-cell">No review history yet.</td></tr>
+              <tr><td colSpan={5} className="mp-empty-cell">No review history yet.</td></tr>
             )}
           </tbody>
         </table>
@@ -248,6 +305,10 @@ export default function MyPerformance() {
   const [cycles, setCycles] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState('');
+  const [selectedReviewId, setSelectedReviewId] = useState('');
+  const [reviewDetails, setReviewDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [retryCount, setRetryCount] = useState(0);
@@ -291,6 +352,37 @@ export default function MyPerformance() {
     loadPerformance();
   }, [retryCount]);
 
+  useEffect(() => {
+    if (!selectedReviewId) {
+      setReviewDetails(null);
+      setDetailsError('');
+      return undefined;
+    }
+
+    let isCurrent = true;
+    setDetailsLoading(true);
+    setDetailsError('');
+    getPerformanceReview(selectedReviewId).then((result) => {
+      if (!isCurrent) return;
+      if (!result.success) {
+        setReviewDetails(null);
+        setDetailsError(result.error || 'Could not load review details.');
+        return;
+      }
+      setReviewDetails(unwrapReview(result));
+    }).catch((error) => {
+      if (!isCurrent) return;
+      setReviewDetails(null);
+      setDetailsError(error.message || 'Could not load review details.');
+    }).finally(() => {
+      if (isCurrent) setDetailsLoading(false);
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedReviewId]);
+
   const selectedReview = reviews.find((review) => getReviewCycleId(review) === selectedCycleId) || null;
 
   function handleReviewSubmitted(review) {
@@ -322,7 +414,17 @@ export default function MyPerformance() {
           />
           <div className="mp-right-col">
             <GoalsCard review={selectedReview} />
-            <ReviewHistoryCard reviews={reviews} cycles={cycles} />
+            <ReviewHistoryCard
+              reviews={reviews}
+              cycles={cycles}
+              selectedReviewId={selectedReviewId}
+              onSelectReview={setSelectedReviewId}
+            />
+            <ReviewDetailsCard
+              review={reviewDetails}
+              loading={detailsLoading}
+              error={detailsError}
+            />
           </div>
         </main>
       </div>
