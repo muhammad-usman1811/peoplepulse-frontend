@@ -11,13 +11,15 @@ export const API_BASE_URL = RAW_API_URL.replace(/\/+$/, '');
  * Helper to perform fetch with JSON headers, Bearer JWT, request timeout & robust error parsing
  */
 async function request(endpoint, options = {}, timeoutMs = 8000) {
+  const { responseType, ...fetchOptions } = options;
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = endpoint.startsWith('http')
     ? endpoint
     : `${API_BASE_URL}${cleanEndpoint}`;
 
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const headers = {
-    'Content-Type': 'application/json',
+    ...(!isFormData && { 'Content-Type': 'application/json' }),
     Accept: 'application/json',
     ...(options.headers || {})
   };
@@ -32,15 +34,17 @@ async function request(endpoint, options = {}, timeoutMs = 8000) {
 
   try {
     const response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       headers,
       signal: controller.signal
     });
     clearTimeout(timer);
 
     let data;
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
+    const contentType = response.headers.get('content-type') || '';
+    if (response.ok && responseType === 'blob') {
+      data = await response.blob();
+    } else if (contentType.includes('application/json')) {
       data = await response.json();
     } else {
       const text = await response.text();
@@ -301,6 +305,60 @@ export async function getMyPerformanceReviews({ page = 1, limit = 100, cycle } =
   return await request(`/performance/reviews/my?${query.toString()}`, { method: 'GET' }, 20000);
 }
 
+/**
+ * List performance reviews for the authenticated manager's direct reports.
+ * Endpoint: GET /api/performance/team
+ */
+export async function getPerformanceTeamReviews({ page = 1, limit = 100 } = {}) {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return await request(`/performance/team?${query.toString()}`, { method: 'GET' }, 20000);
+}
+
+/**
+ * List reviews submitted for a performance cycle (HR/Admin access).
+ * Endpoint: GET /api/performance/cycles/:cycleId/reviews
+ */
+export async function getPerformanceCycleReviews(cycleId, { page = 1, limit = 100 } = {}) {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return await request(
+    `/performance/cycles/${encodeURIComponent(cycleId)}/reviews?${query.toString()}`,
+    { method: 'GET' },
+    20000
+  );
+}
+
+/**
+ * Create a performance cycle (HR/Admin access).
+ * Endpoint: POST /api/performance/cycles
+ */
+export async function createPerformanceCycle(payload) {
+  return await request('/performance/cycles', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }, 20000);
+}
+
+/**
+ * Close a performance cycle (HR/Admin access).
+ * Endpoint: PATCH /api/performance/cycles/:cycleId/close
+ */
+export async function closePerformanceCycle(cycleId) {
+  return await request(`/performance/cycles/${encodeURIComponent(cycleId)}/close`, {
+    method: 'PATCH'
+  }, 20000);
+}
+
+/**
+ * Submit or update a manager review (assigned manager or HR/Admin access).
+ * Endpoint: PUT /api/performance/reviews/:reviewId/manager-review
+ */
+export async function submitPerformanceManagerReview(reviewId, payload) {
+  return await request(`/performance/reviews/${encodeURIComponent(reviewId)}/manager-review`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  }, 20000);
+}
+
 export async function getPerformanceReview(reviewId) {
   return await request(`/performance/reviews/${encodeURIComponent(reviewId)}`, {
     method: 'GET'
@@ -308,22 +366,59 @@ export async function getPerformanceReview(reviewId) {
 }
 
 /**
- * List onboarding tasks assigned to the authenticated user.
- * Endpoint: GET /api/onboarding/my-tasks
+ * Get the active onboarding checklist for the authenticated user.
+ * Endpoint: GET /api/onboarding/my-onboarding
  */
-export async function getMyOnboardingTasks({ page = 1, limit = 100 } = {}) {
-  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
-  return await request(`/onboarding/my-tasks?${query.toString()}`, { method: 'GET' }, 20000);
+export async function getMyOnboardingChecklist() {
+  return await request('/onboarding/my-onboarding', { method: 'GET' }, 20000);
 }
 
 /**
- * Mark an onboarding task assigned to the authenticated user as complete.
- * Endpoint: PATCH /api/onboarding/tasks/:taskId/complete
+ * Update a task in an onboarding checklist.
+ * Endpoint: PATCH /api/onboarding/:checklistId/tasks/:taskId
  */
-export async function completeMyOnboardingTask(taskId) {
-  return await request(`/onboarding/tasks/${encodeURIComponent(taskId)}/complete`, {
+export async function updateMyOnboardingTask(checklistId, taskId, updates) {
+  return await request(`/onboarding/${encodeURIComponent(checklistId)}/tasks/${encodeURIComponent(taskId)}`, {
     method: 'PATCH',
-    body: JSON.stringify({})
+    body: JSON.stringify(updates)
+  }, 20000);
+}
+
+/**
+ * List documents uploaded by the authenticated employee.
+ * Endpoint: GET /api/employee-documents/me
+ */
+export async function getMyDocuments() {
+  return await request('/employee-documents/me', { method: 'GET' }, 20000);
+}
+
+/**
+ * Upload a document for the authenticated employee.
+ * Endpoint: POST /api/employee-documents/upload
+ */
+export async function uploadMyDocument(file, category) {
+  const body = new FormData();
+  body.append('category', category);
+  body.append('file', file);
+  return await request('/employee-documents/upload', { method: 'POST', body }, 20000);
+}
+
+/**
+ * Delete a document uploaded by the authenticated employee.
+ * Endpoint: DELETE /api/employee-documents/:id
+ */
+export async function deleteMyDocument(documentId) {
+  return await request(`/employee-documents/${encodeURIComponent(documentId)}`, { method: 'DELETE' }, 20000);
+}
+
+/**
+ * Download a document file visible to the authenticated user.
+ * Endpoint: GET /api/documents/:id/file
+ */
+export async function getMyDocumentFile(documentId) {
+  return await request(`/documents/${encodeURIComponent(documentId)}/file`, {
+    method: 'GET',
+    responseType: 'blob'
   }, 20000);
 }
 
@@ -331,22 +426,33 @@ export async function completeMyOnboardingTask(taskId) {
  * Attendance APIs
  * Swagger: https://peoplepulse-backend.vercel.app/api-docs/#/
  */
-export async function getMyAttendance() {
-  return await request('/attendance/me', { method: 'GET' });
+export async function getMyAttendance({ from, to, limit = 30 } = {}) {
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (from) query.set('from', from);
+  if (to) query.set('to', to);
+  return await request(`/attendance/me?${query.toString()}`, { method: 'GET' }, 20000);
 }
 
+/**
+ * Record the authenticated employee's clock-in for today.
+ * Endpoint: POST /api/attendance/clock-in
+ */
 export async function clockIn() {
   return await request('/attendance/clock-in', {
     method: 'POST',
     body: JSON.stringify({})
-  });
+  }, 20000);
 }
 
+/**
+ * Record the authenticated employee's clock-out for today.
+ * Endpoint: POST /api/attendance/clock-out
+ */
 export async function clockOut() {
   return await request('/attendance/clock-out', {
     method: 'POST',
     body: JSON.stringify({})
-  });
+  }, 20000);
 }
 
 /**

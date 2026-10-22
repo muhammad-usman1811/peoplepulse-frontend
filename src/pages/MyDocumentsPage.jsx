@@ -1,13 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { Eye, FileText, Upload } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Eye, FileText, Trash2, Upload } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import { cardClass, cardTitleClass } from '../components/requestUi';
-
-const INITIAL_DOCUMENTS = [
-  { id: 1, name: 'Employment Contract.pdf', uploaded: 'Jan 5, 2026', size: '240 KB' },
-  { id: 2, name: 'CNIC Copy.pdf', uploaded: 'Jan 5, 2026', size: '180 KB' },
-  { id: 3, name: 'Degree Certificate.pdf', uploaded: 'Jan 5, 2026', size: '310 KB' },
-];
+import { deleteMyDocument, getMyDocumentFile, getMyDocuments, uploadMyDocument } from '../services/api';
 
 const POLICIES = [
   { id: 1, name: 'Leave Policy 2026', category: 'HR Policies', updated: 'Jan 2026' },
@@ -17,13 +12,18 @@ const POLICIES = [
 ];
 
 function formatSize(bytes) {
+  if (!Number.isFinite(bytes)) return '—';
   return bytes >= 1024 * 1024
     ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
     : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
-function formatDate(date) {
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function formatDate(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? '—'
+    : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function PreviewDialog({ item, onClose }) {
@@ -63,51 +63,165 @@ function PreviewDialog({ item, onClose }) {
 }
 
 export default function MyDocumentsPage() {
-  const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
+  const [documents, setDocuments] = useState([]);
   const [previewItem, setPreviewItem] = useState(null);
+  const [category, setCategory] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const [deletingDocumentId, setDeletingDocumentId] = useState(null);
+  const [viewingDocumentId, setViewingDocumentId] = useState(null);
+  const [error, setError] = useState('');
+  const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
 
-  function handleFileChange(event) {
+  async function loadDocuments() {
+    setIsLoading(true);
+    setError('');
+    const result = await getMyDocuments();
+    if (!result.success || result.data?.success === false) {
+      setError(result.error || result.data?.message || 'Could not load your documents.');
+    } else if (!Array.isArray(result.data?.data?.documents)) {
+      setError('The documents service returned an unexpected list.');
+    } else {
+      setDocuments(result.data.data.documents);
+    }
+    setIsLoading(false);
+  }
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
+  useEffect(() => {
+    if (!previewItem?.url) return undefined;
+    return () => URL.revokeObjectURL(previewItem.url);
+  }, [previewItem]);
+
+  async function handleFileChange(event) {
     const files = Array.from(event.target.files || []);
+    event.target.value = '';
     if (!files.length) return;
 
-    const added = files.map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      name: file.name,
-      uploaded: formatDate(new Date()),
-      size: formatSize(file.size),
-      url: URL.createObjectURL(file),
-    }));
-    setDocuments((current) => [...added, ...current]);
-    event.target.value = '';
+    const documentCategory = category.trim();
+    if (!documentCategory) {
+      setUploadError('Enter a document category before uploading.');
+      return;
+    }
+
+    setUploadError('');
+    setIsUploading(true);
+    let uploadedAny = false;
+    const uploadFailures = [];
+    try {
+      for (const file of files) {
+        const result = await uploadMyDocument(file, documentCategory);
+        if (!result.success || result.data?.success === false) {
+          uploadFailures.push(`${file.name}: ${result.error || result.data?.message || 'Upload failed.'}`);
+        } else {
+          uploadedAny = true;
+        }
+      }
+
+      if (uploadedAny) {
+        const result = await getMyDocuments();
+        if (!result.success || result.data?.success === false || !Array.isArray(result.data?.data?.documents)) {
+          setError(result.error || result.data?.message || 'Upload succeeded, but the document list could not be refreshed.');
+        } else {
+          setDocuments(result.data.data.documents);
+        }
+      }
+      if (uploadFailures.length) setUploadError(uploadFailures.join(' '));
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  async function handleDelete(document) {
+    const documentId = document._id || document.id;
+    if (!documentId || deletingDocumentId !== null) return;
+    if (!window.confirm(`Delete ${document.originalName || document.name || 'this document'}?`)) return;
+
+    setDeletingDocumentId(documentId);
+    setError('');
+    try {
+      const result = await deleteMyDocument(documentId);
+      if (!result.success || result.data?.success === false) {
+        setError(result.error || result.data?.message || 'Could not delete this document.');
+      } else {
+        setDocuments((current) => current.filter((item) => (item._id || item.id) !== documentId));
+      }
+    } finally {
+      setDeletingDocumentId(null);
+    }
+  }
+
+  async function handleView(document) {
+    const documentId = document._id || document.id;
+    if (!documentId || viewingDocumentId !== null) return;
+
+    setViewingDocumentId(documentId);
+    setError('');
+    try {
+      const result = await getMyDocumentFile(documentId);
+      if (!result.success || !(result.data instanceof Blob)) {
+        setError(result.error || 'Could not open this document.');
+        return;
+      }
+
+      setPreviewItem({
+        ...document,
+        name: document.originalName || document.name || 'Untitled document',
+        uploaded: formatDate(document.createdAt || document.uploaded),
+        size: formatSize(document.size),
+        url: URL.createObjectURL(result.data),
+      });
+    } finally {
+      setViewingDocumentId(null);
+    }
   }
 
   return (
     <DashboardLayout title="My Documents" breadcrumbs="Home / My Documents">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
         <section className={cardClass}>
-          <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className={cardTitleClass}>My Documents</h2>
               <p className="mt-0.5 text-xs text-slate-500">Uploaded personal documents</p>
             </div>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="brand-action-button inline-flex shrink-0 items-center gap-1.5 rounded-md border-0 px-3 py-2 text-xs font-semibold"
-            >
-              <Upload size={14} />
-              Upload Document
-            </button>
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="text-xs font-semibold text-slate-600">
+                Category
+                <input
+                  type="text"
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  maxLength={50}
+                  placeholder="e.g. certificate"
+                  className="mt-1 block h-8 w-36 rounded-md border border-slate-300 px-2 text-xs font-normal text-slate-700 outline-none focus:border-[#2C6F7F] focus:ring-1 focus:ring-[#2C6F7F]"
+                />
+              </label>
+              <button
+                type="button"
+                disabled={!category.trim() || isUploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="brand-action-button inline-flex shrink-0 items-center gap-1.5 rounded-md border-0 px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Upload size={14} />
+                {isUploading ? 'Uploading…' : 'Upload Document'}
+              </button>
+            </div>
             <input
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+              accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
               onChange={handleFileChange}
               className="hidden"
             />
           </div>
+          {uploadError && <p role="alert" className="mb-3 text-xs text-red-600">{uploadError}</p>}
+          {error && documents.length > 0 && <p role="alert" className="mb-3 text-xs text-red-600">{error}</p>}
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[520px] table-fixed border-collapse text-left">
@@ -126,22 +240,43 @@ export default function MyDocumentsPage() {
                 </tr>
               </thead>
               <tbody>
-                {documents.length === 0 ? (
+                {isLoading ? (
+                  <tr><td colSpan={4} className="h-16 text-center text-xs text-slate-500">Loading documents…</td></tr>
+                ) : error && documents.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="h-16 text-center text-xs text-slate-500">
+                      {error}{' '}
+                      <button type="button" onClick={loadDocuments} className="font-semibold underline">Retry</button>
+                    </td>
+                  </tr>
+                ) : documents.length === 0 ? (
                   <tr><td colSpan={4} className="h-16 text-center text-xs text-slate-500">No documents yet.</td></tr>
                 ) : documents.map((document) => (
-                  <tr key={document.id} className="h-11 border-t border-slate-100 first:border-t-0">
-                    <td className="truncate px-3 text-xs text-slate-800">{document.name}</td>
-                    <td className="px-3 text-xs text-slate-600">{document.uploaded}</td>
-                    <td className="px-3 text-xs text-slate-600">{document.size}</td>
+                  <tr key={document._id || document.id} className="h-11 border-t border-slate-100 first:border-t-0">
+                    <td className="truncate px-3 text-xs text-slate-800">{document.originalName || document.name || 'Untitled document'}</td>
+                    <td className="px-3 text-xs text-slate-600">{formatDate(document.createdAt || document.uploaded)}</td>
+                    <td className="px-3 text-xs text-slate-600">{formatSize(document.size)}</td>
                     <td className="px-3">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewItem(document)}
-                        className="inline-flex h-7 items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2C6F7F]"
-                      >
-                        <Eye size={13} />
-                        View
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={viewingDocumentId !== null}
+                          onClick={() => handleView(document)}
+                          className="inline-flex h-7 items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2C6F7F]"
+                        >
+                          <Eye size={13} />
+                          {viewingDocumentId === (document._id || document.id) ? 'Loading…' : 'View'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={deletingDocumentId !== null}
+                          onClick={() => handleDelete(document)}
+                          aria-label={`Delete ${document.originalName || document.name || 'document'}`}
+                          className="inline-flex h-7 items-center justify-center rounded-md border border-slate-300 bg-white px-2 text-xs text-red-600 hover:bg-red-50 disabled:opacity-60"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

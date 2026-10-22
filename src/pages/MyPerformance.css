@@ -27,6 +27,13 @@
   align-items: start;
 }
 
+.mp-management-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  margin-top: 13px;
+}
+
 .mp-right-col {
   display: flex;
   flex-direction: column;
@@ -125,6 +132,63 @@
 
 .mp-review-load .mp-submit {
   flex: 0 0 auto;
+}
+
+.mp-inline-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.mp-date-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mp-date-row .mp-label {
+  min-width: 0;
+}
+
+.mp-cycle-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.mp-cycle-actions .mp-input {
+  flex: 1;
+  min-width: 100px;
+}
+
+.mp-cycle-actions .mp-detail-button {
+  min-height: 28px;
+  white-space: nowrap;
+}
+
+.mp-manager-goal {
+  margin: 10px 0;
+  padding-top: 8px;
+  border-top: 1px solid #eef0f2;
+}
+
+.mp-kpi-actual {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--mp-muted);
+  font-size: 8px;
+}
+
+.mp-kpi-actual .mp-input {
+  width: 100px;
+  margin-bottom: 6px;
 }
 
 .mp-help,
@@ -393,6 +457,24 @@
 
 @media (max-width: 900px) {
   .mp-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mp-management-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .mp-cycle-actions {
+    flex-wrap: wrap;
+  }
+
+  .mp-cycle-actions .mp-input {
+    flex-basis: 100%;
+  }
+
+  .mp-date-row {
     grid-template-columns: minmax(0, 1fr);
   }
 }

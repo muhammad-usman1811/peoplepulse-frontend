@@ -12,6 +12,7 @@ import MyPayslipsPage from './pages/MyPayslipsPage';
 import MyPerformance from './pages/MyPerformance';
 import MyDocumentsPage from './pages/MyDocumentsPage';
 import MyOnboardingPage from './pages/MyOnboardingPage';
+import AnnouncementPage from './pages/AnnouncementPage';
 import NotificationsPage from './pages/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -130,7 +131,7 @@ export function App() {
           path="/announcements"
           element={
             <ProtectedRoute>
-              <Profile />
+              <AnnouncementPage />
             </ProtectedRoute>
           }
         />

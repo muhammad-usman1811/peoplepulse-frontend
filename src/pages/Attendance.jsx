@@ -13,6 +13,9 @@ const STATUS_STYLES = {
   'On Time': 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   Late: 'bg-amber-50 text-amber-700 ring-amber-200',
   Remote: 'bg-sky-50 text-sky-700 ring-sky-200',
+  Complete: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+  'In Progress': 'bg-amber-50 text-amber-700 ring-amber-200',
+  Recorded: 'bg-slate-50 text-slate-700 ring-slate-200',
 };
 
 function StatusBadge({ status }) {
@@ -20,11 +23,16 @@ function StatusBadge({ status }) {
     'On Time': 'bg-emerald-500',
     Late: 'bg-amber-500',
     Remote: 'bg-sky-500',
+    Complete: 'bg-emerald-500',
+    'In Progress': 'bg-amber-500',
+    Recorded: 'bg-slate-500',
   };
+  const badgeStyle = STATUS_STYLES[status] || STATUS_STYLES.Recorded;
+  const dotStyle = dotStyles[status] || dotStyles.Recorded;
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${STATUS_STYLES[status]}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${dotStyles[status]}`} aria-hidden="true" />
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${badgeStyle}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${dotStyle}`} aria-hidden="true" />
       {status}
     </span>
   );
@@ -34,10 +42,18 @@ function formatTime(date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function extractAttendanceRecords(payload) {
   if (Array.isArray(payload)) return payload;
   if (!payload || typeof payload !== 'object') return [];
   for (const key of ['attendance', 'records', 'items', 'history', 'data']) {
+    if (Array.isArray(payload[key])) return payload[key];
     const records = extractAttendanceRecords(payload[key]);
     if (records.length) return records;
   }
@@ -76,38 +92,67 @@ function getRecordStatus(record) {
   const status = String(record.status || '').toLowerCase();
   if (status.includes('late')) return 'Late';
   if (status.includes('remote') || status.includes('wfh')) return 'Remote';
-  return 'On Time';
+  if (status.includes('on time') || status === 'ontime') return 'On Time';
+  if (status) return record.status;
+  if (record.clockOutAt || record.clockOut || record.checkOut) return 'Complete';
+  if (record.clockInAt || record.clockIn || record.checkIn) return 'In Progress';
+  return 'Recorded';
 }
 
 export default function AttendanceManagementPage() {
   const [records, setRecords] = useState([]);
+  const [todayRecord, setTodayRecord] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [todayStatusError, setTodayStatusError] = useState('');
   const [actionError, setActionError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [todayStatusAvailable, setTodayStatusAvailable] = useState(false);
+  const [historyFilters, setHistoryFilters] = useState({ from: '', to: '', limit: '30' });
+  const [appliedFilters, setAppliedFilters] = useState({ limit: 30 });
 
   const loadAttendance = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
+    setTodayStatusAvailable(false);
     try {
-      const result = await getMyAttendance();
-      if (!result.success) throw new Error(result.error || 'Could not load attendance history.');
-      setRecords(extractAttendanceRecords(result.data).sort((left, right) => getRecordDate(right).localeCompare(getRecordDate(left))));
-      setLoadError('');
+      const today = getLocalDateKey();
+      const [historyResult, todayResult] = await Promise.all([
+        getMyAttendance(appliedFilters),
+        getMyAttendance({ from: today, to: today, limit: 1 })
+      ]);
+
+      if (historyResult.success) {
+        setRecords(extractAttendanceRecords(historyResult.data)
+          .sort((left, right) => getRecordDate(right).localeCompare(getRecordDate(left))));
+        setLoadError('');
+      } else {
+        setLoadError(historyResult.error || 'Could not load attendance history.');
+      }
+
+      if (todayResult.success) {
+        const [record] = extractAttendanceRecords(todayResult.data);
+        setTodayRecord(record || null);
+        setTodayStatusAvailable(true);
+        setTodayStatusError('');
+      } else {
+        setTodayStatusError(todayResult.error || 'Could not load today’s attendance status.');
+      }
     } catch (error) {
       setLoadError(error.message || 'Could not load attendance history.');
+      setTodayStatusError(error.message || 'Could not load today’s attendance status.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [appliedFilters]);
 
   useEffect(() => {
     loadAttendance();
   }, [loadAttendance]);
 
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const todayRecord = records.find((record) => getRecordDate(record) === todayKey);
   const clockInAt = getRecordTime(todayRecord?.clockInAt || todayRecord?.clockIn || todayRecord?.checkIn);
   const clockOutAt = getRecordTime(todayRecord?.clockOutAt || todayRecord?.clockOut || todayRecord?.checkOut);
+  const location = todayRecord?.workLocation || todayRecord?.location || todayRecord?.workMode;
+  const workLocation = typeof location === 'string' ? location : location?.name || location?.type || '—';
   const isClockedIn = clockInAt !== null && clockOutAt === null;
   const isComplete = clockInAt !== null && clockOutAt !== null;
   const tableRows = useMemo(() => records.map((record, index) => ({
@@ -133,6 +178,34 @@ export default function AttendanceManagementPage() {
     }
   };
 
+  const handleFilterSubmit = (event) => {
+    event.preventDefault();
+    if (historyFilters.from && historyFilters.to && historyFilters.from > historyFilters.to) {
+      setLoadError('The start date must be on or before the end date.');
+      return;
+    }
+    setAppliedFilters({
+      ...(historyFilters.from ? { from: historyFilters.from } : {}),
+      ...(historyFilters.to ? { to: historyFilters.to } : {}),
+      limit: Number(historyFilters.limit)
+    });
+  };
+
+  const exportAttendance = () => {
+    const csvCell = (value) => `"${String(value ?? '').replaceAll('"', '""')}"`;
+    const rows = [
+      ['Date', 'Clock in', 'Clock out', 'Hours', 'Status'],
+      ...tableRows.map((row) => [row.date, row.clockIn, row.clockOut, row.hours, row.status])
+    ];
+    const csv = rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `attendance-${getLocalDateKey()}.csv`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
   return (
     <DashboardLayout title="My Attendance" breadcrumbs="Home / My Attendance">
       <div className="mx-auto w-full max-w-5xl space-y-5">
@@ -148,7 +221,7 @@ export default function AttendanceManagementPage() {
                 <p className="mt-1 text-sm text-slate-500">
                   {loading
                     ? 'Loading today’s attendance…'
-                    : actionError || loadError || (isComplete
+                    : actionError || todayStatusError || (!todayStatusAvailable ? 'Checking today’s attendance status…' : isComplete
                     ? `Day completed · ${clockInAt} – ${clockOutAt}`
                     : isClockedIn
                       ? `Clocked in at ${clockInAt} · Remember to clock out at the end of your day.`
@@ -161,16 +234,16 @@ export default function AttendanceManagementPage() {
               <button
                 type="button"
                 onClick={() => performClockAction(clockIn)}
-                disabled={isClockedIn || isComplete || loading || submitting}
+                disabled={!todayStatusAvailable || isClockedIn || isComplete || loading || submitting}
                 className="brand-action-button border-0 inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 sm:flex-none"
               >
                 <CheckCircle2 size={17} />
-                {submitting ? 'Working…' : isClockedIn || isComplete ? 'Clocked In' : 'Clock In'}
+                {submitting ? 'Working…' : isComplete ? 'Day Complete' : isClockedIn ? 'Clocked In' : 'Clock In'}
               </button>
               <button
                 type="button"
                 onClick={() => performClockAction(clockOut)}
-                disabled={!isClockedIn || loading || submitting}
+                disabled={!todayStatusAvailable || !isClockedIn || loading || submitting}
                 className={`border-0 inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:flex-none ${
                   isClockedIn
                     ? 'bg-white text-slate-700 hover:bg-slate-50'
@@ -197,7 +270,7 @@ export default function AttendanceManagementPage() {
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <MapPin size={16} className="text-slate-400" />
               <span>Work location</span>
-              <strong className="ml-auto font-semibold text-slate-900">Office</strong>
+              <strong className="ml-auto font-semibold text-slate-900">{workLocation}</strong>
             </div>
           </div>
         </section>
@@ -210,12 +283,55 @@ export default function AttendanceManagementPage() {
             </div>
             <button
               type="button"
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg border-0 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              onClick={exportAttendance}
+              disabled={!tableRows.length}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg border-0 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ArrowDownToLine size={16} />
               <span className="hidden sm:inline">Export</span>
             </button>
           </div>
+
+          <form onSubmit={handleFilterSubmit} className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-end sm:px-6">
+            <div className="flex-1">
+              <label htmlFor="attendance-from" className="mb-1 block text-xs font-medium text-slate-600">From</label>
+              <input
+                id="attendance-from"
+                type="date"
+                value={historyFilters.from}
+                onChange={(event) => setHistoryFilters((current) => ({ ...current, from: event.target.value }))}
+                className="min-h-10 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700"
+              />
+            </div>
+            <div className="flex-1">
+              <label htmlFor="attendance-to" className="mb-1 block text-xs font-medium text-slate-600">To</label>
+              <input
+                id="attendance-to"
+                type="date"
+                value={historyFilters.to}
+                onChange={(event) => setHistoryFilters((current) => ({ ...current, to: event.target.value }))}
+                className="min-h-10 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700"
+              />
+            </div>
+            <div className="sm:w-32">
+              <label htmlFor="attendance-limit" className="mb-1 block text-xs font-medium text-slate-600">Records</label>
+              <select
+                id="attendance-limit"
+                value={historyFilters.limit}
+                onChange={(event) => setHistoryFilters((current) => ({ ...current, limit: event.target.value }))}
+                className="min-h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              >
+                {[30, 60, 100].map((limit) => <option key={limit} value={limit}>{limit}</option>)}
+              </select>
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="brand-action-button min-h-10 rounded-lg border-0 px-4 text-sm font-semibold disabled:cursor-wait disabled:opacity-60"
+            >
+              Apply filters
+            </button>
+          </form>
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[650px] text-left text-sm">

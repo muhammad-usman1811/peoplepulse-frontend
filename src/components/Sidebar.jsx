@@ -1,15 +1,15 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
+  House,
   Clock,
   Calendar,
-  Compass,
+  MapPin,
   DollarSign,
-  TrendingUp,
+  Award,
   FileText,
-  CheckSquare,
-  Megaphone,
+  ClipboardList,
+  Send,
   Bell,
   User,
   LogOut
@@ -17,18 +17,18 @@ import {
 import { logoutUser } from '../services/api';
 
 const mainNavItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'Dashboard', path: '/dashboard', icon: House },
   { name: 'My Attendance', path: '/attendance', icon: Clock },
   { name: 'My Leave', path: '/leave', icon: Calendar },
-  { name: 'My WFH', path: '/wfh', icon: Compass },
+  { name: 'My WFH', path: '/wfh', icon: MapPin },
   { name: 'My Payslips', path: '/payslips', icon: DollarSign },
-  { name: 'My Performance', path: '/performance', icon: TrendingUp },
+  { name: 'My Performance', path: '/performance', icon: Award },
   { name: 'My Documents', path: '/documents', icon: FileText },
-  { name: 'Onboarding', path: '/onboarding', icon: CheckSquare },
+  { name: 'Onboarding', path: '/onboarding', icon: ClipboardList },
 ];
 
 const bottomNavItems = [
-  { name: 'Announcements', path: '/announcements', icon: Megaphone },
+  { name: 'Announcements', path: '/announcements', icon: Send },
   { name: 'Notifications', path: '/notifications', icon: Bell },
   { name: 'Profile', path: '/profile', icon: User },
 ];

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { completeMyOnboardingTask, getMyOnboardingTasks, getStoredUser } from "../services/api";
+import { getMyOnboardingChecklist, getStoredUser, updateMyOnboardingTask } from "../services/api";
 
 // Re-renders when a CSS media query starts/stops matching.
 function useMediaQuery(query) {
@@ -337,6 +337,7 @@ function getInitials(user) {
 export default function MyOnboardingPage() {
   const user = getStoredUser() || {};
   const employeeName = user.name || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email || "there";
+  const [checklistId, setChecklistId] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -354,15 +355,25 @@ export default function MyOnboardingPage() {
     async function loadTasks() {
       setIsLoading(true);
       setError("");
-      const result = await getMyOnboardingTasks();
+      const result = await getMyOnboardingChecklist();
       if (!isMounted) return;
 
       if (!result.success || result.data?.success === false) {
-        setError(result.error || result.data?.message || "Could not load your onboarding tasks.");
-      } else if (!Array.isArray(result.data?.data?.tasks)) {
-        setError("The onboarding service returned an unexpected task list.");
+        if (result.status === 404) {
+          setChecklistId(null);
+          setTasks([]);
+        } else {
+          setError(result.error || result.data?.message || "Could not load your onboarding checklist.");
+        }
       } else {
-        setTasks(result.data.data.tasks);
+        const payload = result.data?.data;
+        const checklist = payload?.onboarding || payload?.checklist || payload;
+        if (!Array.isArray(checklist?.tasks)) {
+          setError("The onboarding service returned an unexpected checklist.");
+        } else {
+          setChecklistId(checklist._id || checklist.id || null);
+          setTasks(checklist.tasks);
+        }
       }
       setIsLoading(false);
     }
@@ -373,22 +384,22 @@ export default function MyOnboardingPage() {
 
   async function handleCompleteTask(task) {
     const taskId = task._id || task.id;
-    if (!taskId || task.status === "Completed" || completingTaskId !== null) return;
+    if (!checklistId || !taskId || task.status === "Completed" || completingTaskId !== null) return;
 
     setCompletingTaskId(taskId);
     setError("");
     try {
-      const result = await completeMyOnboardingTask(taskId);
-      const completedTask = result.data?.data;
+      const result = await updateMyOnboardingTask(checklistId, taskId, { status: "Completed" });
       if (!result.success || result.data?.success === false) {
         throw new Error(result.error || result.data?.message || "Could not complete this task.");
       }
-      if (!completedTask || completedTask.status !== "Completed") {
-        throw new Error("The onboarding service did not confirm task completion.");
-      }
+      const payload = result.data?.data;
+      const completedTask = payload?.task || payload;
 
       setTasks((currentTasks) => currentTasks.map((currentTask) => (
-        (currentTask._id || currentTask.id) === taskId ? completedTask : currentTask
+        (currentTask._id || currentTask.id) === taskId
+          ? { ...currentTask, ...(completedTask?.status === "Completed" ? completedTask : {}), status: "Completed", completedAt: completedTask?.completedAt || new Date().toISOString() }
+          : currentTask
       )));
     } catch (completionError) {
       setError(completionError.message || "Could not complete this task.");
@@ -451,7 +462,7 @@ export default function MyOnboardingPage() {
                       isLast={i === tasks.length - 1}
                       onComplete={handleCompleteTask}
                       isCompleting={completingTaskId === (task._id || task.id)}
-                      isDisabled={completingTaskId !== null}
+                      isDisabled={completingTaskId !== null || !checklistId}
                     />
                   ))}
                 </ul>
