@@ -6,6 +6,7 @@ import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Attendance from './pages/Attendance';
+import HRAttendancePage from './pages/HRAttendancePage';
 import MyLeavePage from './pages/MyLeavePage';
 import MyWFHPage from './pages/MyWFHPage';
 import MyPayslipsPage from './pages/MyPayslipsPage';
@@ -75,6 +76,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <Attendance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/attendance"
+          element={
+            <ProtectedRoute>
+              <HRAttendancePage />
             </ProtectedRoute>
           }
         />
