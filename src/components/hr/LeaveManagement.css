@@ -1,0 +1,566 @@
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.leave-management-container {
+  width: 100%;
+  padding: 20px 26px 30px;
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   TOP TABS
+========================================= */
+
+.leave-page-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #e7eaed;
+}
+
+.leave-page-tab {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  height: 38px;
+  padding: 0 14px;
+
+  border: none;
+  background: transparent;
+
+  color: #737d8b;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.leave-page-tab:hover {
+  color: #347f91;
+}
+
+.leave-page-tab.active {
+  color: #277d91;
+  font-weight: 600;
+}
+
+.leave-page-tab.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 10px;
+  right: 10px;
+  bottom: -1px;
+
+  height: 2px;
+
+  background: #3e95a8;
+
+  border-radius: 2px 2px 0 0;
+}
+
+.pending-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 17px;
+  height: 17px;
+
+  padding: 0 4px;
+
+  border-radius: 9px;
+
+  background: #fff0c7;
+  color: #c98200;
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+
+/* =========================================
+   LEAVE REQUEST CARD
+========================================= */
+
+.leave-requests-card {
+  background: #ffffff;
+
+  border: 1px solid #e5e8ec;
+  border-radius: 7px;
+
+  overflow: hidden;
+}
+
+
+/* =========================================
+   CARD HEADER
+========================================= */
+
+.leave-requests-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 17px;
+}
+
+.leave-requests-header h2 {
+  margin: 0;
+
+  color: #101828;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.leave-requests-header p {
+  margin: 4px 0 0;
+
+  color: #89919d;
+
+  font-size: 10px;
+}
+
+
+/* =========================================
+   LEAVE TYPE FILTER
+========================================= */
+
+.leave-type-filter {
+  position: relative;
+}
+
+.leave-type-filter select {
+  width: 145px;
+  height: 30px;
+
+  padding: 0 28px 0 10px;
+
+  appearance: none;
+
+  border: 1px solid #dfe4e8;
+  border-radius: 5px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #5f6977;
+
+  font-family: inherit;
+  font-size: 10px;
+
+  cursor: pointer;
+}
+
+.leave-type-filter select:focus {
+  border-color: #69aebe;
+}
+
+.leave-filter-icon {
+  position: absolute;
+
+  right: 9px;
+  top: 8px;
+
+  pointer-events: none;
+
+  color: #7d8794;
+}
+
+
+/* =========================================
+   TABLE WRAPPER
+========================================= */
+
+.leave-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+
+/* =========================================
+   TABLE
+========================================= */
+
+.leave-management-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  table-layout: fixed;
+}
+
+.leave-management-table thead {
+  background: #fafbfc;
+}
+
+.leave-management-table th {
+  height: 32px;
+
+  padding: 0 12px;
+
+  border-top: 1px solid #edf0f2;
+  border-bottom: 1px solid #edf0f2;
+
+  color: #707987;
+
+  font-size: 8.5px;
+  font-weight: 600;
+
+  text-align: left;
+
+  letter-spacing: 0.25px;
+}
+
+.leave-management-table td {
+  height: 48px;
+
+  padding: 0 12px;
+
+  border-bottom: 1px solid #edf0f2;
+
+  color: #475467;
+
+  font-size: 10px;
+}
+
+.leave-management-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.leave-management-table tbody tr:hover {
+  background: #fbfcfd;
+}
+
+
+/* =========================================
+   COLUMN WIDTHS
+
+   Employee | Type | Dates |
+   Duration | Stage | Status
+========================================= */
+
+.leave-management-table th:nth-child(1),
+.leave-management-table td:nth-child(1) {
+  width: 24%;
+}
+
+.leave-management-table th:nth-child(2),
+.leave-management-table td:nth-child(2) {
+  width: 16%;
+}
+
+.leave-management-table th:nth-child(3),
+.leave-management-table td:nth-child(3) {
+  width: 19%;
+}
+
+.leave-management-table th:nth-child(4),
+.leave-management-table td:nth-child(4) {
+  width: 12%;
+}
+
+.leave-management-table th:nth-child(5),
+.leave-management-table td:nth-child(5) {
+  width: 15%;
+}
+
+.leave-management-table th:nth-child(6),
+.leave-management-table td:nth-child(6) {
+  width: 14%;
+}
+
+
+/* =========================================
+   EMPLOYEE CELL
+========================================= */
+
+.leave-employee-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.leave-employee-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 27px;
+  height: 27px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #e4f1f4;
+  color: #347f91;
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.leave-employee-name {
+  color: #344054;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+
+/* =========================================
+   TYPE
+========================================= */
+
+.leave-type-text {
+  color: #475467;
+  font-weight: 500;
+}
+
+
+/* =========================================
+   STAGE
+========================================= */
+
+.leave-stage {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 19px;
+
+  padding: 2px 8px;
+
+  border-radius: 4px;
+
+  font-size: 8.5px;
+  font-weight: 500;
+}
+
+.leave-stage.hr-review {
+  background: #eaf4f7;
+  color: #287c91;
+}
+
+.leave-stage.completed {
+  background: #f0f2f4;
+  color: #667085;
+}
+
+
+/* =========================================
+   STATUS
+========================================= */
+
+.leave-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 19px;
+
+  padding: 2px 8px;
+
+  border-radius: 4px;
+
+  font-size: 8.5px;
+  font-weight: 500;
+}
+
+.leave-status-badge.pending {
+  background: #fff0c7;
+  color: #c98200;
+}
+
+.leave-status-badge.approved {
+  background: #d9f8eb;
+  color: #16865a;
+}
+
+.leave-status-badge.rejected {
+  background: #ffe0e0;
+  color: #dc5252;
+}
+
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+
+.leave-empty-row {
+  height: 80px !important;
+
+  text-align: center !important;
+
+  color: #98a2b3 !important;
+}
+
+
+/* =========================================
+   LEAVE POLICY
+========================================= */
+
+.leave-policy-card {
+  background: #ffffff;
+
+  border: 1px solid #e5e8ec;
+  border-radius: 7px;
+
+  padding: 18px;
+}
+
+.leave-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding-bottom: 17px;
+
+  border-bottom: 1px solid #edf0f2;
+}
+
+.leave-section-header h2 {
+  margin: 0;
+
+  color: #101828;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.leave-section-header p {
+  margin: 4px 0 0;
+
+  color: #89919d;
+
+  font-size: 10px;
+}
+
+.policy-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 6px;
+
+  background: #e5f3f6;
+  color: #347f91;
+}
+
+
+/* =========================================
+   POLICY GRID
+========================================= */
+
+.leave-policy-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 12px;
+
+  padding-top: 16px;
+}
+
+.leave-policy-item {
+  padding: 15px;
+
+  border: 1px solid #e8ebee;
+  border-radius: 6px;
+
+  background: #ffffff;
+}
+
+.policy-item-top {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.policy-item-top h3 {
+  margin: 0;
+
+  color: #344054;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.policy-item-top span {
+  padding: 4px 7px;
+
+  border-radius: 4px;
+
+  background: #e8f5f7;
+  color: #277d91;
+
+  font-size: 8px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.leave-policy-item p {
+  margin: 8px 0 0;
+
+  color: #7a8491;
+
+  font-size: 9px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1000px) {
+  .leave-management-container {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 800px) {
+  .leave-management-table {
+    min-width: 850px;
+  }
+
+  .leave-policy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .leave-management-container {
+    padding: 14px;
+  }
+
+  .leave-requests-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .leave-page-tabs {
+    overflow-x: auto;
+  }
+
+  .leave-page-tab {
+    white-space: nowrap;
+  }
+}

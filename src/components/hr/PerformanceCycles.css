@@ -1,0 +1,500 @@
+/* =========================================
+   PAGE
+========================================= */
+
+.performance-cycles-page {
+  width: 100%;
+
+  padding: 20px 26px 30px;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   REVIEW CYCLES CARD
+========================================= */
+
+.review-cycles-card {
+  width: 100%;
+
+  margin-bottom: 14px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e8ec;
+  border-radius: 7px;
+
+  overflow: hidden;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.review-cycles-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 15px 15px 11px;
+}
+
+.review-cycles-header h2 {
+  margin: 0;
+
+  color: #101828;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.review-cycles-header p {
+  margin: 3px 0 0;
+
+  color: #89919d;
+
+  font-size: 8px;
+}
+
+
+/* =========================================
+   START NEW CYCLE
+========================================= */
+
+.start-cycle-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  height: 24px;
+
+  padding: 0 10px;
+
+  border: none;
+  border-radius: 5px;
+
+  background: #347f91;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 8px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.start-cycle-button span {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.start-cycle-button:hover {
+  background: #2d7182;
+}
+
+
+/* =========================================
+   REVIEW TABLE
+========================================= */
+
+.review-cycles-table {
+  width: calc(100% - 30px);
+
+  margin: 0 15px 14px;
+}
+
+
+/* =========================================
+   TABLE HEADER
+========================================= */
+
+.review-table-header {
+  display: grid;
+
+  grid-template-columns:
+    27% 25% 21% 27%;
+
+  align-items: center;
+
+  min-height: 27px;
+
+  background: #fafafa;
+
+  color: #667085;
+
+  font-size: 7.5px;
+  font-weight: 600;
+}
+
+
+/* =========================================
+   TABLE ROW
+========================================= */
+
+.review-table-row {
+  display: grid;
+
+  grid-template-columns:
+    27% 25% 21% 27%;
+
+  align-items: center;
+
+  min-height: 38px;
+
+  border-bottom: 1px solid #edf0f2;
+
+  color: #344054;
+
+  font-size: 8.5px;
+}
+
+.review-table-row:last-child {
+  border-bottom: none;
+}
+
+
+/* =========================================
+   TABLE CELL PADDING
+========================================= */
+
+.review-table-header > div,
+.review-table-row > div {
+  padding: 0 10px;
+}
+
+
+/* =========================================
+   CYCLE
+========================================= */
+
+.cycle-name {
+  color: #344054;
+
+  font-size: 8.5px;
+  font-weight: 500;
+}
+
+
+/* =========================================
+   PERIOD
+========================================= */
+
+.cycle-period {
+  color: #475467;
+
+  font-size: 8px;
+}
+
+
+/* =========================================
+   STATUS
+========================================= */
+
+.cycle-status {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 16px;
+
+  padding: 0 7px;
+
+  border-radius: 4px;
+
+  font-size: 7px;
+  font-weight: 600;
+}
+
+.cycle-status.in-progress {
+  background: #fff0c7;
+  color: #c98200;
+}
+
+.cycle-status.completed {
+  background: #d9f8eb;
+  color: #16865a;
+}
+
+
+/* =========================================
+   COMPLETION
+========================================= */
+
+.cycle-completion {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.completion-bar {
+  width: 69px;
+  height: 4px;
+
+  overflow: hidden;
+
+  border-radius: 3px;
+
+  background: #e7eaed;
+}
+
+.completion-fill {
+  height: 100%;
+
+  border-radius: 3px;
+
+  background: #347f91;
+}
+
+.cycle-completion span {
+  color: #667085;
+
+  font-size: 7.5px;
+}
+
+.complete-percentage {
+  color: #344054 !important;
+
+  font-size: 8px !important;
+}
+
+
+/* =========================================
+   DEPARTMENT COMPLETION CARD
+========================================= */
+
+.department-completion-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 15px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e8ec;
+  border-radius: 7px;
+}
+
+.department-completion-card h2 {
+  margin: 0 0 12px;
+
+  color: #101828;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* =========================================
+   DEPARTMENT GRID
+========================================= */
+
+.department-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 16px;
+}
+
+
+/* =========================================
+   DEPARTMENT
+========================================= */
+
+.department-item {
+  min-width: 0;
+}
+
+.department-name {
+  margin-bottom: 5px;
+
+  color: #344054;
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+
+/* =========================================
+   DEPARTMENT PROGRESS
+========================================= */
+
+.department-progress-track {
+  width: 100%;
+  height: 4px;
+
+  overflow: hidden;
+
+  border-radius: 3px;
+
+  background: #edf0f2;
+}
+
+.department-progress-fill {
+  height: 100%;
+
+  border-radius: 3px;
+
+  background: #347f91;
+}
+
+
+/* =========================================
+   DEPARTMENT PERCENTAGE
+========================================= */
+
+.department-percentage {
+  margin-top: 5px;
+
+  color: #89919d;
+
+  font-size: 7.5px;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+  .performance-cycles-page {
+    padding: 18px;
+  }
+
+  .department-grid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .performance-cycles-page {
+    padding: 14px;
+  }
+
+  .review-cycles-table {
+    overflow-x: auto;
+  }
+
+  .review-table-header,
+  .review-table-row {
+    min-width: 650px;
+  }
+
+  .department-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================
+   PERFORMANCE API STATES
+========================================= */
+
+.performance-alert {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #fff1f2;
+    color: #b42318;
+    border: 1px solid #fecdd3;
+    font-size: 14px;
+}
+
+.performance-empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: #667085;
+    font-size: 14px;
+}
+
+
+/* =========================================
+   CREATE CYCLE FORM
+========================================= */
+
+.cycle-create-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 20px 24px;
+    border-top: 1px solid #eaecf0;
+    border-bottom: 1px solid #eaecf0;
+    background: #fafafa;
+}
+
+.cycle-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex: 1;
+}
+
+.cycle-form-field label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #344054;
+}
+
+.cycle-form-field input,
+.cycle-form-field select {
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #d0d5dd;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #344054;
+    font-size: 14px;
+    outline: none;
+}
+
+.cycle-form-field input:focus,
+.cycle-form-field select:focus {
+    border-color: #98a2b3;
+}
+
+.create-cycle-button {
+    height: 40px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 7px;
+    background: #111827;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.create-cycle-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+/* =========================================
+   CLOSE CYCLE
+========================================= */
+
+.close-cycle-button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    background: white;
+    color: #344054;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.close-cycle-button:hover {
+    background: #f9fafb;
+}
+
+.completion-not-available {
+    color: #98a2b3;
+    font-size: 14px;
+}

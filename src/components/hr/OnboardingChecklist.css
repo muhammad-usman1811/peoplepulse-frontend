@@ -1,0 +1,428 @@
+/* =========================================
+   PAGE
+========================================= */
+
+.onboarding-page {
+  width: 100%;
+
+  padding: 20px 26px 30px;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   ACTIVE ONBOARDING CARD
+========================================= */
+
+.active-onboarding-card {
+  width: 100%;
+
+  margin-bottom: 14px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e8ec;
+  border-radius: 7px;
+
+  overflow: hidden;
+}
+
+
+/* =========================================
+   CARD HEADER
+========================================= */
+
+.onboarding-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 15px 15px 12px;
+}
+
+.onboarding-card-header h2 {
+  margin: 0;
+
+  color: #101828;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.onboarding-card-header p {
+  margin: 3px 0 0;
+
+  color: #89919d;
+
+  font-size: 8px;
+}
+
+
+/* =========================================
+   ASSIGN CHECKLIST BUTTON
+========================================= */
+
+.assign-checklist-button {
+  height: 24px;
+
+  padding: 0 10px;
+
+  border: 1px solid #347f91;
+  border-radius: 5px;
+
+  background: #ffffff;
+  color: #347f91;
+
+  font-family: inherit;
+  font-size: 8px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.assign-checklist-button:hover {
+  background: #eaf4f7;
+}
+
+
+/* =========================================
+   ACTIVE ONBOARDING TABLE
+========================================= */
+
+.active-onboarding-table {
+  width: calc(100% - 30px);
+
+  margin: 0 15px 14px;
+}
+
+
+/* =========================================
+   TABLE HEADER
+========================================= */
+
+.onboarding-table-header {
+  display: grid;
+
+  grid-template-columns:
+    25% 22% 26% 27%;
+
+  align-items: center;
+
+  min-height: 27px;
+
+  background: #fafafa;
+
+  color: #667085;
+
+  font-size: 7.5px;
+  font-weight: 600;
+}
+
+
+/* =========================================
+   TABLE ROW
+========================================= */
+
+.onboarding-table-row {
+  display: grid;
+
+  grid-template-columns:
+    25% 22% 26% 27%;
+
+  align-items: center;
+
+  min-height: 37px;
+
+  border-bottom: 1px solid #edf0f2;
+
+  color: #344054;
+
+  font-size: 8.5px;
+}
+
+.onboarding-table-row:last-child {
+  border-bottom: none;
+}
+
+
+/* =========================================
+   TABLE CELLS
+========================================= */
+
+.onboarding-table-header > div,
+.onboarding-table-row > div {
+  padding: 0 10px;
+}
+
+.hire-name {
+  color: #344054;
+
+  font-size: 8.5px;
+  font-weight: 500;
+}
+
+.hire-start-date {
+  color: #475467;
+
+  font-size: 8px;
+}
+
+.hire-buddy {
+  color: #475467;
+
+  font-size: 8px;
+}
+
+
+/* =========================================
+   PROGRESS
+========================================= */
+
+.hire-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  width: 51px;
+  height: 4px;
+
+  overflow: hidden;
+
+  border-radius: 3px;
+
+  background: #e7eaed;
+}
+
+.progress-fill {
+  height: 100%;
+
+  border-radius: 3px;
+
+  background: #347f91;
+}
+
+.hire-progress span {
+  color: #667085;
+
+  font-size: 7px;
+}
+
+
+/* =========================================
+   CHECKLIST TEMPLATE CARD
+========================================= */
+
+.checklist-template-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 15px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e8ec;
+  border-radius: 7px;
+}
+
+.checklist-template-card h2 {
+  margin: 0 0 11px;
+
+  color: #101828;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* =========================================
+   CHECKLIST ITEMS
+========================================= */
+
+.checklist-items {
+  width: 100%;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-height: 33px;
+
+  border-bottom: 1px solid #edf0f2;
+
+  cursor: pointer;
+}
+
+.checklist-item:last-child {
+  border-bottom: none;
+}
+
+
+/* =========================================
+   CHECKLIST LEFT SIDE
+========================================= */
+
+.checklist-item-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+
+/* =========================================
+   CHECKBOX
+========================================= */
+
+.checklist-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 15px;
+  height: 15px;
+
+  padding: 0;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d7dde1;
+  border-radius: 4px;
+
+  background: #ffffff;
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.checklist-checkbox.checked {
+  border-color: #19b88a;
+
+  background: #19b88a;
+}
+
+
+/* =========================================
+   CHECKLIST TEXT
+========================================= */
+
+.checklist-title {
+  color: #344054;
+
+  font-size: 8.5px;
+  font-weight: 400;
+}
+
+.checklist-day {
+  color: #7f8995;
+
+  font-size: 7.5px;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+  .onboarding-page {
+    padding: 18px;
+  }
+
+  .active-onboarding-table {
+    min-width: 650px;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .onboarding-page {
+    padding: 14px;
+  }
+
+  .onboarding-card-header {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .active-onboarding-table {
+    overflow-x: auto;
+  }
+
+  .onboarding-table-header,
+  .onboarding-table-row {
+    min-width: 650px;
+  }
+
+  .checklist-template-card {
+    padding: 13px;
+  }
+}
+
+/* =========================================
+   Onboarding API Integration
+========================================= */
+
+.onboarding-alert {
+  margin-bottom: 14px;
+  padding: 11px 15px;
+  border-radius: 7px;
+  font-size: 13px;
+}
+
+.onboarding-alert-error {
+  background: #fff1f1;
+  border: 1px solid #ffd4d4;
+  color: #bd3e3e;
+}
+
+.onboarding-alert-success {
+  background: #edf8f1;
+  border: 1px solid #ccebd6;
+  color: #287744;
+}
+
+.onboarding-loading,
+.onboarding-empty {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #89949e;
+  font-size: 13px;
+}
+
+.onboarding-table-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.onboarding-table-row:hover {
+  background: #fafcfd;
+}
+
+.onboarding-table-row.selected {
+  background: #f1f8f9;
+}
+
+.assign-checklist-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.onboarding-progress-summary {
+  padding: 13px 20px;
+  border-top: 1px solid #edf0f2;
+  color: #71808b;
+  font-size: 12px;
+  text-align: right;
+}
