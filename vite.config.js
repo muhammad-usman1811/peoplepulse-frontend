@@ -9,7 +9,7 @@ export default defineConfig({
     open: false,
     proxy: {
       '/api': {
-        target: 'https://peoplepulse-backend.vercel.app',
+        target: 'https://peoplepulse-backend-ecru.vercel.app',
         changeOrigin: true,
         secure: true,
       }
