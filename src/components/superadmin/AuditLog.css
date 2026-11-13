@@ -1,0 +1,227 @@
+/* Container Layout */
+.al-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Controls Header Toolbar */
+.al-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.al-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Search Box Input */
+.al-search-box {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f1f5f9;
+  border-radius: 20px;
+  padding: 8px 14px;
+  gap: 8px;
+  width: 240px;
+  box-sizing: border-box;
+}
+
+.al-search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  color: #334155;
+  width: 100%;
+}
+
+.al-search-box input::placeholder {
+  color: #94a3b8;
+}
+
+.al-search-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+/* Pill Select Dropdowns */
+.al-pill-filter {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f1f5f9;
+  border-radius: 20px;
+  padding: 8px 14px;
+  gap: 6px;
+  color: #475569;
+  box-sizing: border-box;
+}
+
+.al-pill-filter select {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  padding-right: 4px;
+}
+
+.al-btn-export {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: #ffffff;
+  border: 1px solid #005f73;
+  color: #005f73;
+  padding: 6px 14px;
+  border-radius: 6px; /* Reduced from 20px to match design pic 1 */
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.al-btn-export:hover:not(:disabled) {
+  background-color: #f0fdf4;
+  border-color: #005f73;
+}
+.al-btn-export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Main Table Container Card */
+.al-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.al-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Table Design */
+.al-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.al-table th {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.al-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13.5px;
+  color: #1e293b;
+}
+
+.al-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.al-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Specific Table Columns */
+.al-col-timestamp {
+  color: #334155;
+  white-space: nowrap;
+}
+
+.al-col-actor {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.al-col-action {
+  color: #334155;
+}
+
+.al-col-details {
+  color: #475569;
+}
+
+.al-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 40px 20px;
+}
+
+/* Pagination Footer Controls */
+.al-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #64748b;
+  background-color: #ffffff;
+}
+
+.al-pagination-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.al-btn-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.al-btn-nav:hover:not(:disabled) {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.al-btn-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Error Banner */
+.al-error-alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 13px;
+}

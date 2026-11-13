@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import './DashboardLayout.css'
 
 export const DashboardLayout = ({ 
   children, 
   title = "My Profile", 
-  breadcrumbs = "Home / Profile" 
+  breadcrumbs = "Home / Profile",
+  role = "employee" 
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="dashboard-app-container">
-      {/* Sidebar Navigation */}
       <Sidebar 
+        role={role}
         isMobileOpen={mobileMenuOpen} 
         onCloseMobile={() => setMobileMenuOpen(false)} 
       />

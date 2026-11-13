@@ -16,6 +16,28 @@ import NotificationsPage from './pages/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 
+
+// HR Admin Pages
+import EmployeeDirectory from './components/hr/EmployeeDirectory';
+import AttendanceManagement from './components/hr/AttendanceManagement';
+import LeaveManagement from './components/hr/LeaveManagement';
+import PayrollProcessing from './components/hr/PayrollProcessing';
+import RecruitmentDashboardPage from './components/hr/RecruitmentDashboardPage';
+import OnboardingChecklist from './components/hr/OnboardingChecklist';
+import PerformanceCycles from './components/hr/PerformanceCycles';
+import AnnouncementsComposer from './components/hr/AnnouncementsComposer';
+import ReportsAnalytics from './components/hr/ReportsAnalytics';
+
+import HRProfile from './pages/HRProfile';
+
+// SuperAdmin roles
+import OrganizationSetup from './components/superadmin/OrganizationSetup';
+import RolesPermissions from './components/superadmin/RolesPermissions';
+import EmployeeMasterList from './components/superadmin/EmployeeMasterList';
+import SystemConfig from './components/superadmin/SystemConfig';
+import AuditLog from './components/superadmin/AuditLog';
+
+
 // Always show the login screen when opening the app root.
 const RootRedirect = () => {
   return <Navigate to="/login" replace />;
@@ -65,7 +87,7 @@ export function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['employee']}>
               <Dashboard />
             </ProtectedRoute>
           }
@@ -139,6 +161,155 @@ export function App() {
           element={
             <ProtectedRoute>
               <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* HR Admin Routes - EJ1*/}
+        <Route
+          path="/hr/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <EmployeeDirectory />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/directory"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <EmployeeDirectory />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/attendance"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <AttendanceManagement />
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route
+          path="/hr/leaves"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <LeaveManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/payroll"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <PayrollProcessing />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/recruitment"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <RecruitmentDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/onboarding"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <OnboardingChecklist />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/performance"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <PerformanceCycles />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/announcements"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <AnnouncementsComposer />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/reports"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <ReportsAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/profile"
+          element={
+            <ProtectedRoute allowedRoles={['hr', 'hr_admin']}>
+              <HRProfile />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* Super Admin Routes */}
+        <Route
+          path="/superadmin/organization-setup"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <OrganizationSetup />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/superadmin/roles-permissions"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <RolesPermissions />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/superadmin/employees"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <EmployeeMasterList />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/superadmin/system-configuration"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <SystemConfig />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/superadmin/audit-log"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <AuditLog/>
             </ProtectedRoute>
           }
         />
