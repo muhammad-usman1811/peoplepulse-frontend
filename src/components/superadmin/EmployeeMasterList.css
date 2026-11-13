@@ -1,0 +1,354 @@
+
+.eml-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #102b50;
+  font-size: 13px;
+}
+
+.eml-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.eml-search,
+.eml-select-wrap {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0 11px;
+  color: #8290a4;
+}
+
+.eml-search {
+  flex: 1;
+  min-width: 210px;
+  max-width: 330px;
+}
+
+.eml-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #102b50;
+  font: inherit;
+}
+
+.eml-search input::placeholder {
+  color: #8b98aa;
+}
+
+.eml-select-wrap select {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #193655;
+  font: inherit;
+  max-width: 150px;
+}
+
+.eml-toolbar-spacer {
+  flex: 1;
+}
+
+.eml-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.eml-btn-primary {
+  background: #287d8d;
+  color: #fff;
+  border: 1px solid #287d8d;
+}
+
+.eml-btn-primary:hover {
+  background: #206b79;
+}
+
+.eml-btn-outline {
+  background: #fff;
+  color: #287d8d;
+  border: 1px solid #b9d4da;
+}
+
+.eml-btn-outline:hover {
+  background: #f0f8f9;
+}
+
+.eml-btn-danger {
+  background: #fff;
+  color: #e34343;
+  border: 1px solid #ffc5c5;
+}
+
+.eml-btn-danger:hover {
+  background: #fff4f4;
+}
+
+.eml-btn-small {
+  min-height: 27px;
+  padding: 0 9px;
+  font-size: 11px;
+}
+
+.eml-notice {
+  background: #fff7e8;
+  border: 1px solid #f4dfb7;
+  color: #805b18;
+  border-radius: 7px;
+  padding: 10px 12px;
+  line-height: 1.45;
+}
+
+.eml-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.eml-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.eml-card-title h2 {
+  font-size: 15px;
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+.eml-card-title p {
+  font-size: 11px;
+  color: #8593a8;
+  margin: 0;
+}
+
+.eml-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.eml-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.eml-table th {
+  background: #f7f8fa;
+  color: #65758b;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+
+.eml-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf0f4;
+  font-size: 12px;
+}
+
+.eml-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.eml-table tbody tr:hover {
+  background: #fbfdfe;
+}
+
+.eml-person {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 155px;
+}
+
+.eml-person > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.eml-person strong {
+  font-size: 12px;
+  font-weight: 600;
+  color: #122d50;
+}
+
+.eml-person small {
+  font-size: 10px;
+  color: #8a98ad;
+}
+
+.eml-avatar {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #e0f3f5;
+  color: #287d8d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.eml-status {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #d7f8e9;
+  color: #16845b;
+}
+
+.eml-status.on-leave {
+  background: #fff1c9;
+  color: #9a6a00;
+}
+
+.eml-status.inactive {
+  background: #ffe1e1;
+  color: #bb3434;
+}
+
+.eml-row-actions {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.eml-empty {
+  text-align: center !important;
+  color: #8290a4;
+  padding: 28px !important;
+}
+
+.eml-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: #0f243b66;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.eml-modal {
+  width: min(100%, 480px);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 20px 60px #122d5030;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.eml-modal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.eml-modal-heading h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.eml-modal-heading button {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.eml-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  color: #41546b;
+}
+
+.eml-field input {
+  height: 37px;
+  border: 1px solid #dce3eb;
+  border-radius: 6px;
+  padding: 0 10px;
+  font: inherit;
+  color: #102b50;
+  outline-color: #287d8d;
+}
+
+.eml-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  .eml-toolbar {
+    align-items: stretch;
+  }
+
+  .eml-search {
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .eml-toolbar-spacer {
+    display: none;
+  }
+
+  .eml-btn {
+    flex: 1;
+  }
+
+  .eml-card {
+    padding: 10px;
+  }
+
+  .eml-table th,
+  .eml-table td {
+    padding: 9px;
+  }
+
+  .eml-row-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -146,15 +146,12 @@ export const Login = () => {
                 message: 'Authentication successful! Redirecting...',
             });
 
-            const requestedPath = location.state?.from?.pathname;
+            const requestedpath = location.state?.from?.pathname;
 
             let destination = roleHome;
 
-            // HR must always land on the HR directory.
-            if (role === 'hr' || role === 'hr_admin') {
-                destination = '/hr/directory';
-            } else if (canAccessRequestedPath(requestedPath, role)) {
-                destination = requestedPath;
+            if (canAccessRequestedPath(requestedpath, role)) {
+                destination = requestedpath;
             }
 
             console.log('Logged-in role:', role);

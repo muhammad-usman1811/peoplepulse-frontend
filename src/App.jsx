@@ -30,6 +30,13 @@ import ReportsAnalytics from './components/hr/ReportsAnalytics';
 
 import HRProfile from './pages/HRProfile';
 
+// SuperAdmin roles
+import OrganizationSetup from './components/superadmin/OrganizationSetup';
+import RolesPermissions from './components/superadmin/RolesPermissions';
+import EmployeeMasterList from './components/superadmin/EmployeeMasterList';
+import SystemConfig from './components/superadmin/SystemConfig';
+import AuditLog from './components/superadmin/AuditLog';
+
 
 // Always show the login screen when opening the app root.
 const RootRedirect = () => {
@@ -260,7 +267,53 @@ export function App() {
           }
         />
 
-        
+
+        {/* Super Admin Routes */}
+        <Route
+          path="/superadmin/organization-setup"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <OrganizationSetup />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/superadmin/roles-permissions"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <RolesPermissions />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/superadmin/employees"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <EmployeeMasterList />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/superadmin/system-configuration"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <SystemConfig />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/superadmin/audit-log"
+          element={
+            <ProtectedRoute allowedRoles={['super_admin']}>
+              <AuditLog/>
+            </ProtectedRoute>
+          }
+        />
+
         {/* Catch-all fallback */}
         <Route path="*" element={<RootRedirect />} />
       </Routes>
